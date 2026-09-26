@@ -71,9 +71,9 @@ async () => {
   await reset();__mock.failNext='/status';await refresh();
   check('Failed polling retains prior matrix and shows stale state',document.querySelectorAll('#matrix td.cell').length===12 && document.getElementById('freshness').classList.contains('stale'));
   __mock.status.buckets.push({auth_id:'codex-outside-pro.json',model:'outside-model',ready:true,seconds_left:500,len:292});await refresh();
-  check('Outside-scope templates remain visible and excluded from denominator',document.getElementById('matrix').textContent.includes('outside-model') && document.getElementById('summary').textContent.includes('8/12') && document.getElementById('summary').textContent.includes('范围外'));
+  check('Outside-scope templates remain visible and excluded from denominator',document.getElementById('matrix').textContent.includes('outside-model') && document.getElementById('summary').textContent.includes('8/12') && document.getElementById('summary').textContent.includes('範圍外'));
   await reset();__mock.status.probe_accounts=[];__mock.status.models=[];await refresh();
-  check('Empty scope retains fallback matrix',document.getElementById('summary').textContent.includes('目标桶数') && document.querySelectorAll('#matrix td.cell').length===12);
+  check('Empty scope retains fallback matrix',document.getElementById('summary').textContent.includes('目標桶數') && document.querySelectorAll('#matrix td.cell').length===12);
   if(document.getElementById('overviewReady'))check('Summary does not invent a target for empty scope',document.getElementById('overviewReady').textContent==='—');
   await reset();delete __mock.status.probe_run;delete __mock.status.probe_proxies_rotating;await refresh();
   check('Old-server fallback disables unsupported probe actions',document.getElementById('btnProbeStart').disabled && document.getElementById('btnProbeCancel').disabled);

@@ -19,12 +19,12 @@ import { dirname, join } from 'node:path';
 const here = dirname(fileURLToPath(import.meta.url));
 const html = readFileSync(join(here, '..', '..', 'go', 'ui.html'), 'utf8');
 
-const START = '/* ---------------------------- 服务态 ---------------------------- */';
+const START = '/* ---------------------------- 服務態 ---------------------------- */';
 const END = 'function renderMatrix(';
 const from = html.indexOf(START);
 const to = html.indexOf(END, from);
 if (from < 0 || to < 0) {
-  throw new Error('could not find the 服务态 section in ui.html; the markers moved');
+  throw new Error('could not find the 服務態 section in ui.html; the markers moved');
 }
 const source = html.slice(from, to);
 for (const name of ['OBS_UNKNOWN_MS', 'OBS_STALE_MS', 'fmtAgo', 'obsKindName', 'obs24h', 'observedState']) {
@@ -48,8 +48,8 @@ function check(name, got, wantCls, wantLabelPart) {
 
 // No observations at all is NOT normal. A bucket nobody has sent traffic to
 // must never render green.
-check('no observations', observedState({ ready: true }, false), 'obs-none', '无观测');
-check('observed absent but ready', observedState({ ready: true, observed: null }, false), 'obs-none', '无观测');
+check('no observations', observedState({ ready: true }, false), 'obs-none', '無觀測');
+check('observed absent but ready', observedState({ ready: true, observed: null }, false), 'obs-none', '無觀測');
 
 // Older than the unknown window: the bucket is idle, not healthy.
 check('idle for three hours', observedState({
@@ -120,7 +120,7 @@ check('blind while injecting', observedState({
     natural_normal: 12,
     last_signed_kind: 'normal', last_signed_at: ago(47), last_signed_wrote: false,
   },
-}, false), 'obs-blind', '注入中 · 盲区');
+}, false), 'obs-blind', '注入中 · 盲區');
 
 // Same bucket under dry_run. The template is held but never sent, so the
 // silence is the upstream's own doing and calling it our blind spot is a lie
@@ -142,7 +142,7 @@ check('ready but no traffic', observedState({
     last_at: ago(38), last_kind: 'normal', last_wrote: false, natural_normal: 12,
     last_signed_kind: 'normal', last_signed_at: ago(38), last_signed_wrote: false,
   },
-}, false), 'obs-blind', '无流量');
+}, false), 'obs-blind', '無流量');
 
 // Traffic flowing, bucket empty, upstream silent: report the last reading and
 // say it is stale. Not blind -- nothing is being injected, so the silence is
@@ -153,7 +153,7 @@ check('stale with an empty bucket', observedState({
     last_at: ago(1), last_kind: 'silent', last_wrote: false, natural_limited: 11,
     last_signed_kind: 'limited', last_signed_at: ago(38), last_signed_wrote: false,
   },
-}, false), 'obs-blind', '陈旧');
+}, false), 'obs-blind', '陳舊');
 
 // The sample size rides along, because 3 observations and 4237 observations
 // are not the same claim.
@@ -181,7 +181,7 @@ const with24h = observedState({
     recent_24h: { natural_normal: 3, natural_limited: 411 },
   },
 }, false);
-if (!with24h.title.includes('近 24h 自然观测：正常 3 · 受限 411')) {
+if (!with24h.title.includes('近 24h 自然觀測：正常 3 · 受限 411')) {
   failures++;
   console.error(`FAIL 24h rollup in tooltip\n  got ${JSON.stringify(with24h.title)}`);
 } else {

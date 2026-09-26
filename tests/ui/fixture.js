@@ -3,27 +3,27 @@
   var clone = function (v) { return JSON.parse(JSON.stringify(v)); };
   var accounts = ['codex-demo-a-pro.json', 'codex-demo-b-pro.json', 'codex-demo-c-pro.json'];
   var models = ['gpt-5.5', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-6-astra'];
-  // 观测样例：每一种服务态各来一格，否则新面板只能看到其中一两种。
-  // ago(分钟) 生成一个过去的时间戳。
+  // 觀測樣例：每一種服務態各來一格，否則新面板只能看到其中一兩種。
+  // ago(分鐘) 生成一個過去的時間戳。
   function ago(min){return new Date(Date.now()-min*60000).toISOString();}
-  // 每一格对应 observedState 的一个分支，预览页因此一屏看全所有状态。
+  // 每一格對應 observedState 的一個分支，預覽頁因此一屏看全所有狀態。
   function r24(n,l,o){return {natural_normal:n,natural_limited:l,natural_other:o||0,injected_silent:0,injected_limited:0,injected_normal:0,injected_other:0};}
   var OBSERVED = {
-    // 新鲜的自然观测，正常。
+    // 新鮮的自然觀測，正常。
     'codex-demo-a-pro.json|gpt-5.5':      {natural_normal:161,natural_limited:0,natural_other:0,injected_silent:340,injected_limited:0,injected_normal:2,injected_other:0,last_kind:'normal',last_len:292,last_wrote:false,last_at:ago(2),last_natural_kind:'normal',last_natural_at:ago(2),last_signed_kind:'normal',last_signed_at:ago(2),last_signed_wrote:false,recent_24h:r24(58,0)},
-    // 新鲜的自然观测，受限 —— 桶是空的，采不到。
+    // 新鮮的自然觀測，受限 —— 桶是空的，採不到。
     'codex-demo-a-pro.json|gpt-5.6-terra':{natural_normal:24,natural_limited:1076,natural_other:0,injected_silent:0,injected_limited:0,injected_normal:0,injected_other:0,last_kind:'limited',last_len:312,last_wrote:false,last_at:ago(0),last_natural_kind:'limited',last_natural_at:ago(0),last_signed_kind:'limited',last_signed_at:ago(0),last_signed_wrote:false,recent_24h:r24(9,402)},
-    // 上游在一个被我们注入过的请求上仍然签了新的 292 —— 直接证据，不是盲区。
+    // 上游在一個被我們注入過的請求上仍然簽了新的 292 —— 直接證據，不是盲區。
     'codex-demo-a-pro.json|gpt-6-astra': {natural_normal:2,natural_limited:0,natural_other:0,injected_silent:71,injected_limited:0,injected_normal:19,injected_other:0,last_kind:'normal',last_len:292,last_wrote:true,last_at:ago(1),last_natural_kind:'normal',last_natural_at:ago(88),last_signed_kind:'normal',last_signed_at:ago(1),last_signed_wrote:true,recent_24h:r24(1,0)},
-    // 报警：我们注入了有效模板，上游照样发受限态。
+    // 報警：我們注入了有效模板，上游照樣發受限態。
     'codex-demo-b-pro.json|gpt-5.5':      {natural_normal:8,natural_limited:31,natural_other:0,injected_silent:12,injected_limited:97,injected_normal:0,injected_other:0,last_kind:'limited',last_len:312,last_wrote:true,last_at:ago(0),last_natural_kind:'limited',last_natural_at:ago(9),last_signed_kind:'limited',last_signed_at:ago(0),last_signed_wrote:true,recent_24h:r24(2,28)},
-    // 未知格式：既不是 292 也不是 312。上游换了格式，或者配置对不上了。
+    // 未知格式：既不是 292 也不是 312。上游換了格式，或者配置對不上了。
     'codex-demo-b-pro.json|gpt-5.6-terra':{natural_normal:0,natural_limited:4,natural_other:55,injected_silent:0,injected_limited:0,injected_normal:0,injected_other:3,last_kind:'other',last_len:340,last_wrote:false,last_at:ago(1),last_natural_kind:'other',last_natural_at:ago(1),last_signed_kind:'other',last_signed_at:ago(1),last_signed_wrote:false,recent_24h:r24(0,1,37)},
-    // 盲区：桶里有模板，一直在注入，上游因此不签发。
+    // 盲區：桶裏有模板，一直在注入，上游因此不簽發。
     'codex-demo-c-pro.json|gpt-5.5':      {natural_normal:12,natural_limited:0,natural_other:0,injected_silent:806,injected_limited:0,injected_normal:0,injected_other:0,last_kind:'silent',last_len:0,last_wrote:true,last_at:ago(0),last_natural_kind:'normal',last_natural_at:ago(47),last_signed_kind:'normal',last_signed_at:ago(47),last_signed_wrote:false,recent_24h:r24(4,0)},
-    // 无流量：桶是好的，只是没人往这打请求 —— 与服务态无关。
+    // 無流量：桶是好的，只是沒人往這打請求 —— 與服務態無關。
     'codex-demo-c-pro.json|gpt-5.6-terra':{natural_normal:3,natural_limited:11,natural_other:0,injected_silent:0,injected_limited:0,injected_normal:0,injected_other:0,last_kind:'limited',last_len:312,last_wrote:false,last_at:ago(38),last_natural_kind:'limited',last_natural_at:ago(38),last_signed_kind:'limited',last_signed_at:ago(38),last_signed_wrote:false,recent_24h:r24(1,5)}
-    // 其余格子刻意不给 observed：「没数据」必须和「正常」看得出区别。
+    // 其餘格子刻意不給 observed：「沒數據」必須和「正常」看得出區別。
   };
   function feed(){
     return [
@@ -50,7 +50,7 @@
     function response(body,status){return Promise.resolve(new Response(JSON.stringify(clone(body)),{status:status||200,headers:{'Content-Type':'application/json'}}));}
     if(m.failNext===path){m.failNext=null;return response({error:'Simulated failure'},503);}
     if(path==='/status') return response(s);
-    if(path==='/ops/choices') return response({source:'host',accounts:accounts.concat(['codex-demo-disabled-pro.json']).map(function(a,i){return {name:a,label:'账号 '+String.fromCharCode(65+i)+' · Pro',disabled:i===3,selected:s.probe_accounts.indexOf(a)>=0};}),models:models.map(function(n){return {name:n,label:n,selected:s.models.indexOf(n)>=0};})});
+    if(path==='/ops/choices') return response({source:'host',accounts:accounts.concat(['codex-demo-disabled-pro.json']).map(function(a,i){return {name:a,label:'賬號 '+String.fromCharCode(65+i)+' · Pro',disabled:i===3,selected:s.probe_accounts.indexOf(a)>=0};}),models:models.map(function(n){return {name:n,label:n,selected:s.models.indexOf(n)>=0};})});
     if(q.get('confirm')!=='1') return response({error:'Missing confirmation'},400);
     if(path==='/ops/scope'){
       q.get('fields').split(',').forEach(function(f){var spec={accounts:['probe_accounts','account'],models:['models','model'],proxies:['probe_proxies','proxy'],rotating:['probe_proxies_rotating','rotating_proxy']}[f];if(spec)s[spec[0]]=q.getAll(spec[1]);});

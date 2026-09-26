@@ -25,7 +25,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
             else:
                 html = (ROOT / 'go/ui.html').read_text(encoding='utf-8')
             html = html.replace('<head>', '<head><script src="/fixture.js"></script>', 1)
-            html = html.replace('<body>', '<body><div style="padding:8px 12px;border:1px solid #aab9a4;border-radius:6px;margin-bottom:20px;font:12px sans-serif;color:#526548;background:#f4f8f1">本地验收 · 全部为虚构数据，操作不会发送到 CPA</div>', 1)
+            html = html.replace('<body>', '<body><div style="padding:8px 12px;border:1px solid #aab9a4;border-radius:6px;margin-bottom:20px;font:12px sans-serif;color:#526548;background:#f4f8f1">本地驗收 · 全部為虛構數據，操作不會發送到 CPA</div>', 1)
             payload = html.encode('utf-8')
             content_type = 'text/html; charset=utf-8'
         else:
