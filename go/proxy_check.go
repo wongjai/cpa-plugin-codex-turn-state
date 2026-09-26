@@ -196,7 +196,7 @@ func runProxyCheck() pluginapi.ManagementResponse {
 		// with no static entries does NOT fall back to direct, and neither does this.
 		targets = append(targets, target{pool: proxyPoolStatic, index: 1, url: ""})
 		out.Direct = true
-		out.Note = "两个代理池都是空的 —— 探测会走本机直连，所以这里测的就是直连出口。"
+		out.Note = "兩個代理池都是空的 —— 探測會走本機直連，所以這裡測的就是直連出口。"
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), proxyCheckBudget)
@@ -273,7 +273,7 @@ func proxyCheckOne(ctx context.Context, pool *probeClientPool, poolName string, 
 	if errClient != nil {
 		// A malformed exit never reaches the network. Saying so precisely matters:
 		// otherwise a typo in the pool is indistinguishable from a dead vendor.
-		out.Detail = "这条代理地址本身有问题：" + probeRedact(errClient.Error())
+		out.Detail = "這條代理地址本身有問題：" + probeRedact(errClient.Error())
 		return out
 	}
 
@@ -288,14 +288,14 @@ func proxyCheckOne(ctx context.Context, pool *probeClientPool, poolName string, 
 	}
 	// Only the direction that is actually proof. See proxyCheckResult.Rotated.
 	if out.Rotated && poolName == proxyPoolStatic && raw != "" {
-		out.Mismatch = "这条在静态池里，但两次采样给了不同地址 —— 它其实是轮换的，应该移到轮换池。"
+		out.Mismatch = "這條在靜態池裡，但兩次採樣給了不同地址 —— 它其實是輪換的，應該移到輪換池。"
 	}
 
 	started := time.Now()
 	status, errReach := proxyCheckReach(ctx, client, model)
 	out.MS = time.Since(started).Milliseconds()
 	if errReach != nil {
-		out.Detail = "连不上：" + probeRedact(errReach.Error())
+		out.Detail = "連不上：" + probeRedact(errReach.Error())
 		return out
 	}
 
@@ -303,16 +303,16 @@ func proxyCheckOne(ctx context.Context, pool *probeClientPool, poolName string, 
 	switch status {
 	case http.StatusUnauthorized:
 		out.Verdict = proxyVerdictOK
-		out.Detail = "通。401 正是不带凭据时该有的答复，说明请求确实走到了 OpenAI。"
+		out.Detail = "通。401 正是不帶憑據時該有的答覆，說明請求確實走到了 OpenAI。"
 	case http.StatusForbidden:
 		out.Verdict = proxyVerdictBlocked
-		out.Detail = "连得上，但上游拒绝（403）—— 多半是这个出口地址被挡了。"
+		out.Detail = "連得上，但上游拒絕（403）—— 多半是這個出口地址被擋了。"
 	case http.StatusTooManyRequests:
 		out.Verdict = proxyVerdictRateLimited
-		out.Detail = "连得上，但被限速（429）—— 这个出口短期内请求太多。"
+		out.Detail = "連得上，但被限速（429）—— 這個出口短期內請求太多。"
 	default:
 		out.Verdict = proxyVerdictUnexpected
-		out.Detail = fmt.Sprintf("连得上，上游回了 %d（不带凭据时预期是 401）。", status)
+		out.Detail = fmt.Sprintf("連得上，上游回了 %d（不帶憑據時預期是 401）。", status)
 	}
 	return out
 }

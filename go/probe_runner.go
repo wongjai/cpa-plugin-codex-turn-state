@@ -31,7 +31,7 @@
 // A harvested token lives ~3600s. The run does not stop after the first fill: it
 // keeps a background loop that tops up any in-scope bucket once it drops under a
 // few minutes of life left, so the store stays warm for as long as CPA serves
-// traffic. That is the operator's "最后5分钟再获取一遍".
+// traffic. That is the operator's "最後5分鐘再獲取一遍".
 //
 // # What must never leak out of this file
 //
@@ -418,7 +418,7 @@ func probeSweep(ctx context.Context, cfg pluginConfig, accounts, models, proxies
 
 	// The run does not end here. Substitution needs live templates for as long as
 	// CPA serves traffic, so the goroutine stays up and tops up each bucket a few
-	// minutes before its token expires -- the operator's "最后5分钟再获取一遍". It
+	// minutes before its token expires -- the operator's "最後5分鐘再獲取一遍". It
 	// runs until the run is cancelled or the plugin reloads.
 	probeRunLog("initial fill done; renewal active — buckets refresh automatically within %s of expiry", probeRenewThreshold)
 	probeRunUpdate(func(run *probeRunState) { run.Current = "renewal active" })

@@ -58,7 +58,7 @@ const (
 	routeStatus       = "/codex-turn-state/status"
 	routeBucketsClear = "/codex-turn-state/buckets/clear"
 	// Named selftest, not probe: it cannot harvest, and sharing a name with the
-	// dashboard's 探测 would invite exactly the wrong conclusion from a green
+	// dashboard's 探測 would invite exactly the wrong conclusion from a green
 	// result. See selftestNote.
 	routeSelftest = "/codex-turn-state/selftest"
 	// routeDashboard is relative to the plugin's own resource prefix, so the
@@ -183,7 +183,7 @@ func managementRegister(raw []byte) ([]byte, error) {
 				// silently discarded it.
 				Path:        routeDashboard,
 				Menu:        "Codex Turn-State",
-				Description: "探测/业务状态看板：桶就绪度、角色、dry_run",
+				Description: "探測/業務狀態看板：桶就緒度、角色、dry_run",
 			},
 			{
 				// Read-only status, unauthenticated by virtue of the resource
@@ -196,39 +196,39 @@ func managementRegister(raw []byte) ([]byte, error) {
 				// email. That is the user's informed choice (they asked for a
 				// no-login page).
 				Path:        routeStatusResource,
-				Description: "只读状态（无需鉴权），供看板拉取",
+				Description: "只讀狀態（無需鑑權），供看板拉取",
 			},
 			// The keyless actions. Unauthenticated by virtue of the resource
 			// prefix, GET-only by the host's rule, guarded by confirm=1 rather than
 			// by a key. None of them echoes probe_management_key, the only value on
 			// this plugin that is never displayed at all. No Menu: the dashboard fires these with fetch, they are not
 			// pages to navigate to.
-			{Path: routeOpsDryRun, Description: "翻转 dry_run（无需鉴权，需 confirm=1）"},
-			{Path: routeOpsRole, Description: "切换 role（无需鉴权，需 confirm=1）"},
-			{Path: routeOpsClear, Description: "清空桶（无需鉴权，需 confirm=1）"},
-			{Path: routeOpsSelftest, Description: "连通性自检（无需鉴权，需 confirm=1，烧额度）"},
+			{Path: routeOpsDryRun, Description: "翻轉 dry_run（無需鑑權，需 confirm=1）"},
+			{Path: routeOpsRole, Description: "切換 role（無需鑑權，需 confirm=1）"},
+			{Path: routeOpsClear, Description: "清空桶（無需鑑權，需 confirm=1）"},
+			{Path: routeOpsSelftest, Description: "連通性自檢（無需鑑權，需 confirm=1，燒額度）"},
 			// Saving the scope is keyless like the other four, and so is reading
 			// the proxy list back: the status document now carries it in the
 			// clear (see statusResponse), at the operator's explicit instruction,
 			// because the write-only masked editor meant retyping every password
 			// on every scope edit. routeConfig stays behind the key regardless --
 			// see the comment there.
-			{Path: routeOpsScope, Description: "保存探测范围（无需鉴权，需 confirm=1）"},
+			{Path: routeOpsScope, Description: "保存探測範圍（無需鑑權，需 confirm=1）"},
 			// The probe runner's controls. Keyless and confirm=1 guarded like the
 			// rest of /ops; the run authenticates with the configured probe keys,
 			// so the operator never supplies one.
-			{Path: routeOpsProbeStart, Description: "启动探测运行（无需鉴权，需 confirm=1，烧额度）"},
-			{Path: routeOpsProbeCancel, Description: "取消探测运行（无需鉴权，需 confirm=1）"},
+			{Path: routeOpsProbeStart, Description: "啟動探測運行（無需鑑權，需 confirm=1，燒額度）"},
+			{Path: routeOpsProbeCancel, Description: "取消探測運行（無需鑑權，需 confirm=1）"},
 			// Not quota-spending -- it sends no credential -- but it does dial every
 			// exit, so it is confirm=1 guarded like the other actions.
-			{Path: routeOpsProxyCheck, Description: "批量测代理到 OpenAI 的连通性（无需鉴权，需 confirm=1，不烧额度）"},
+			{Path: routeOpsProxyCheck, Description: "批量測代理到 OpenAI 的連通性（無需鑑權，需 confirm=1，不燒額度）"},
 			// The scope editor's menu. Read-only, so it is the one /ops route with
 			// no confirm=1 in its description: the page fetches it bare on load,
 			// before the operator has clicked anything, and a confirm requirement
 			// would make the checkboxes fail to populate rather than protect
 			// anything. No Menu, for the same reason as the rest: it is fetched by
 			// the page, not navigated to.
-			{Path: routeOpsChoices, Description: "可选账号/模型清单（无需鉴权，只读）"},
+			{Path: routeOpsChoices, Description: "可選賬號/模型清單（無需鑑權，只讀）"},
 		},
 	})
 }
@@ -810,7 +810,7 @@ func handleRoleResource(q url.Values) pluginapi.ManagementResponse {
 		"role":      role,
 		"persisted": persisted,
 		"warning":   warning,
-		"note":      "若切换后发现钩子没被重新协商（probe 采不到 / business 不替换），重启一次 CPA。",
+		"note":      "若切換後發現鉤子沒被重新協商（probe 採不到 / business 不替換），重啟一次 CPA。",
 	})
 }
 
@@ -1355,8 +1355,8 @@ func handleScopeSave(q url.Values) pluginapi.ManagementResponse {
 		RotatingMasked:     maskProxyURLs(rotating),
 		TargetsTotal:       len(accounts) * len(models),
 		ConfigErrors:       problems,
-		Note: "已保存到插件自己的 scope 文件，立即生效，覆盖 config.yaml 里的同名项。" +
-			"采集由看板上的「探测」启动，续期循环每 60 秒重读一次范围。",
+		Note: "已保存到插件自己的 scope 文件，立即生效，覆蓋 config.yaml 裡的同名項。" +
+			"採集由看板上的「探測」啟動，續期循環每 60 秒重讀一次範圍。",
 	}
 	if out.ProbeAccounts == nil {
 		out.ProbeAccounts = []string{}
@@ -1614,17 +1614,17 @@ type upstreamErrorBody struct {
 // plugin's own response interceptor. So it can prove the path is alive; it can
 // never fill a bucket.
 const (
-	selftestNote = "连通性自检不会落盘：host.model.execute 会跳过本插件的响应拦截器。采集请用看板上的「探测」。"
+	selftestNote = "連通性自檢不會落盤：host.model.execute 會跳過本插件的響應攔截器。採集請用看板上的「探測」。"
 	// Said plainly rather than left to inference: HostModelExecutionResponse
 	// carries only StatusCode, Headers and Body, so when we do not pin a
 	// credential there is no way to learn which one answered. Reporting a guess
 	// would be worse than reporting nothing.
 	selftestNoteUntargeted = selftestNote +
-		" 本次未指定 auth_id，由调度器选号；上游响应不含账号标识，因此无法得知实际使用的是哪个号。要定点检查请传 auth_id。"
+		" 本次未指定 auth_id，由調度器選號；上游響應不含賬號標識，因此無法得知實際使用的是哪個號。要定點檢查請傳 auth_id。"
 	// Appended when the upstream answered with an error but the host did not
 	// pass its HTTP status through. status_code stays 0 rather than being
 	// invented; this says so, so nobody reads the 0 as "no response".
-	selftestNoteNoStatus = " 上游返回了错误但宿主未透传 HTTP 状态码，故 status_code 为 0；请看 upstream_error_code 和 error 原文。"
+	selftestNoteNoStatus = " 上游返回了錯誤但宿主未透傳 HTTP 狀態碼，故 status_code 為 0；請看 upstream_error_code 和 error 原文。"
 )
 
 // handleSelftest sends one minimal request and reports whether it reached the
