@@ -1,0 +1,67 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: write  # needed to publish releases on tags
+
+env:
+  GO_VERSION: '1.26'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Go tests
+        working-directory: go
+        run: go test ./...
+
+      - name: UI observed-state test
+        run: node tests/ui/observed-state.test.mjs
+
+      # Mirrors scripts/build.sh but runs natively instead of in Docker:
+      # CGO + c-shared produces the .so that CPA loads as a native plugin.
+      - name: Build plugin (linux/amd64)
+        working-directory: go
+        run: |
+          mkdir -p ../build/linux/amd64
+          CGO_ENABLED=1 go build -buildmode=c-shared \
+            -o ../build/linux/amd64/codex-turn-state.so .
+          ls -la ../build/linux/amd64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codex-turn-state-linux-amd64
+          path: build/linux/amd64/codex-turn-state.so
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: codex-turn-state-linux-amd64
+          path: dist
+
+      - name: Rename for release
+        run: |
+          mv dist/codex-turn-state.so "dist/codex-turn-state-${{ github.ref_name }}.so"
+          ls -la dist
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/codex-turn-state-*.so
+          generate_release_notes: true
