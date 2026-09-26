@@ -19,7 +19,7 @@
     'codex-demo-b-pro.json|gpt-5.5':      {natural_normal:8,natural_limited:31,natural_other:0,injected_silent:12,injected_limited:97,injected_normal:0,injected_other:0,last_kind:'limited',last_len:312,last_wrote:true,last_at:ago(0),last_natural_kind:'limited',last_natural_at:ago(9),last_signed_kind:'limited',last_signed_at:ago(0),last_signed_wrote:true,recent_24h:r24(2,28)},
     // 未知格式：既不是 292 也不是 312。上游換了格式，或者配置對不上了。
     'codex-demo-b-pro.json|gpt-5.6-terra':{natural_normal:0,natural_limited:4,natural_other:55,injected_silent:0,injected_limited:0,injected_normal:0,injected_other:3,last_kind:'other',last_len:340,last_wrote:false,last_at:ago(1),last_natural_kind:'other',last_natural_at:ago(1),last_signed_kind:'other',last_signed_at:ago(1),last_signed_wrote:false,recent_24h:r24(0,1,37)},
-    // 盲區：桶裏有模板，一直在注入，上游因此不簽發。
+    // 盲區：桶裡有模板，一直在注入，上游因此不簽發。
     'codex-demo-c-pro.json|gpt-5.5':      {natural_normal:12,natural_limited:0,natural_other:0,injected_silent:806,injected_limited:0,injected_normal:0,injected_other:0,last_kind:'silent',last_len:0,last_wrote:true,last_at:ago(0),last_natural_kind:'normal',last_natural_at:ago(47),last_signed_kind:'normal',last_signed_at:ago(47),last_signed_wrote:false,recent_24h:r24(4,0)},
     // 無流量：桶是好的，只是沒人往這打請求 —— 與服務態無關。
     'codex-demo-c-pro.json|gpt-5.6-terra':{natural_normal:3,natural_limited:11,natural_other:0,injected_silent:0,injected_limited:0,injected_normal:0,injected_other:0,last_kind:'limited',last_len:312,last_wrote:false,last_at:ago(38),last_natural_kind:'limited',last_natural_at:ago(38),last_signed_kind:'limited',last_signed_at:ago(38),last_signed_wrote:false,recent_24h:r24(1,5)}

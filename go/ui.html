@@ -4,12 +4,12 @@
   codex-turn-state 看板。
 
   這個文件由 go:embed 嵌進插件二進制（見 go/management.go），改完必須重新跑
-  scripts/build.sh 編出新的 .so 並重啓 CPA 才會生效 —— 它不是從磁盤讀的，
+  scripts/build.sh 編出新的 .so 並重啟 CPA 才會生效 —— 它不是從磁盤讀的，
   編輯服務器上的 ui.html 不會有任何效果。
 
   ── 鑑權模型（讀之前先看這段）──────────────────────────────────────────
 
-  用户明確要求：頁面上的操作不彈密鑰。界線現在是「碰不碰機密」，不再是「看還是動」：
+  用戶明確要求：頁面上的操作不彈密鑰。界線現在是「碰不碰機密」，不再是「看還是動」：
 
     不鑑權 GET   ── dashboard（頁面本身）/ status（數據）
                     + 四個操作：dry_run / role / 清桶 / 連通性自檢
@@ -23,30 +23,30 @@
     可選清單 ───── .../ops/choices，也不鑑權。它是【讀】不是動作，所以不帶
                     confirm=1。賬號和模型的勾選清單從它來：名字打錯在任何一層
                     都不會被拒，只會變成一條永遠探不到東西的範圍。
-    代理 ──────── 明文回傳（走 status），框裏顯示的就是真值。這是操作員明確
+    代理 ──────── 明文回傳（走 status），框裡顯示的就是真值。這是操作員明確
                     要求的：顯示掩碼的代價是改一條代理就得把整個池子重打一遍，
                     那個編輯框基本沒法用。【不要再把它「改進」成掩碼。】
 
   ⚠ 代理明文可匿名讀，是在知情下選的：CPA 只綁 127.0.0.1，夠得到這個端口就等於
-  已經在這台機器上。哪天這個端口不再只在隧道里，這一條要第一個回來重估。
+  已經在這臺機器上。哪天這個端口不再只在隧道里，這一條要第一個回來重估。
 
-  【這是用户在知情下選的】：CPA 只綁 127.0.0.1、要走 SSH 隧道才夠得到，所以
-  「不鑑權」實際等於「能進隧道的人（就是用户自己）」。四個操作因此不設任何門。
+  【這是用戶在知情下選的】：CPA 只綁 127.0.0.1、要走 SSH 隧道才夠得到，所以
+  「不鑑權」實際等於「能進隧道的人（就是用戶自己）」。四個操作因此不設任何門。
 
   ⚠ 兩個必須記住的後果：
-    1. status 不鑑權可讀，它返回的 auth_id 就是賬號文件名【含客户郵箱】。
+    1. status 不鑑權可讀，它返回的 auth_id 就是賬號文件名【含客戶郵箱】。
     2. 四個操作也不鑑權：能打開這個頁面的人，無需密碼就能清庫、切真實流量、
        燒額度。哪天想把 8317 暴露到公網或掛反代，先回來看這兩行 —— 那時這些就
        不再只是「隧道里的自己」夠得到了。
 
-  不要往這個文件裏寫任何密鑰、賬號名或 token。
+  不要往這個文件裡寫任何密鑰、賬號名或 token。
 -->
-<html lang="zh-HK">
+<html lang="zh-TW">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="noindex, nofollow" name="robots"/>
-<title>Codex Turn-State · 狀態管理控制枱</title>
+<title>Codex Turn-State · 狀態管理控制檯</title>
 <style>
 :root {
   --bg: #ffffff;
@@ -109,7 +109,7 @@ section { margin-bottom: 18px; }
   border-radius: 8px; padding: 12px 14px;
 }
 
-/* ---------- 模態裏的文本輸入（確認對話框用，不是登錄門） ---------- */
+/* ---------- 模態裡的文本輸入（確認對話框用，不是登錄門） ---------- */
 #modalInput {
   width: 100%; padding: 9px 11px; font-family: inherit; font-size: 14px;
   margin-top: 4px;
@@ -136,7 +136,7 @@ header.bar { margin-bottom: 14px; }
 .badge.dry-on b { color: var(--warn); }
 .badge.dry-off { background: var(--bad-bg); border-color: var(--bad); }
 .badge.dry-off b { color: var(--bad); }
-/* 訪問性質標識。中性呈現：陳述事實，不做告警 —— 不鑑權是用户明確選的配置，
+/* 訪問性質標識。中性呈現：陳述事實，不做告警 —— 不鑑權是用戶明確選的配置，
    不是異常狀態。虛線邊框區別於其它「運行參數」類徽章。 */
 .badge.open { border-style: dashed; }
 .badge.open b { color: var(--muted); font-weight: 600; }
@@ -183,13 +183,13 @@ td.cell button:disabled:hover { outline: 0; }
           display: flex; gap: 16px; flex-wrap: wrap; }
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px;
           margin-right: 5px; vertical-align: -1px; border: 1px solid var(--border); }
-/* 範圍外的行 / 列：store 裏有桶，但它不在 probe_accounts × models 裏。壓低而不
+/* 範圍外的行 / 列：store 裡有桶，但它不在 probe_accounts × models 裡。壓低而不
    隱藏 —— 「多出來的桶」正是配置漂移的信號，藏了就再也沒人發現。 */
 td.acct.outscope, th.model.outscope, em.outscope { font-style: italic; color: var(--faint); }
 
 /* ---------- 服務態觀測 ---------- */
-/* 每格底下一條細帶，回答的問題和上面的 TTL 不一樣：TTL 説「我們手上的模板還
-   能用多久」，這條説「上游最近一次到底給了什麼」。兩個都正常才是真的正常。 */
+/* 每格底下一條細帶，回答的問題和上面的 TTL 不一樣：TTL 說「我們手上的模板還
+   能用多久」，這條說「上游最近一次到底給了什麼」。兩個都正常才是真的正常。 */
 .obs { display: block; margin-top: 3px; font-size: 10.5px; line-height: 1.25;
        font-family: ui-monospace, Menlo, Consolas, monospace; }
 .obs-ok    { color: var(--ok); }
@@ -243,10 +243,10 @@ td.acct.outscope, th.model.outscope, em.outscope { font-style: italic; color: va
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 /* 條目上的兩個狀態標。都只是標註，【不】影響能不能勾：
-     .off  —— 這個憑據在 CPA 裏是停用的。停用只是 CPA 不給它派業務流量，
+     .off  —— 這個憑據在 CPA 裡是停用的。停用只是 CPA 不給它派業務流量，
               探測是點名探的，照樣探得到，所以勾選框保持可用。
-     .gone —— 配置裏選着它，但服務端的清單裏沒有這一項。必須看得見：默默
-              把它從清單裏漏掉，等於無聲地把探測範圍縮小了。 */
+     .gone —— 配置裡選著它，但服務端的清單裡沒有這一項。必須看得見：默默
+              把它從清單裡漏掉，等於無聲地把探測範圍縮小了。 */
 .check .tag {
   flex: 0 0 auto; font-style: normal; font-size: 10.5px; line-height: 1.6;
   padding: 0 6px; border-radius: 999px;
@@ -273,7 +273,7 @@ td.acct.outscope, th.model.outscope, em.outscope { font-style: italic; color: va
 
 /* ---------- 代理連通性測試結果 ----------
    一行一條出口，順序就是 probe_proxies 的順序，也就是探測的嘗試順序。#N 是唯一
-   可靠的身份：整池代理常常共用一個網關、只有用户名不同，掩碼之後二十條長得一模
+   可靠的身份：整池代理常常共用一個網關、只有用戶名不同，掩碼之後二十條長得一模
    一樣，位置才分得開它們。 */
 #proxyCheck:empty { display: none; }
 #proxyCheck { margin-top: 10px; }
@@ -337,7 +337,7 @@ select {
              background: var(--raised); border: 1px solid var(--border); }
 
 /* ---------- 探測進度 ---------- */
-/* 固定高度而不是隨內容長高：一輪探測會滾出幾十行，讓整頁跟着抻長會把下面的
+/* 固定高度而不是隨內容長高：一輪探測會滾出幾十行，讓整頁跟著抻長會把下面的
    桶矩陣一直推出視口。空的時候整塊收起來，不留一條空邊框。 */
 #probeLines:empty { display: none; }
 #probeLines {
@@ -1087,10 +1087,10 @@ button.btn.danger {
 <body>
 <div class="wrap" id="app">
 <header class="dashboard-header">
-<div><div class="eyebrow">CPA / CODEX TURN-STATE</div><h1>狀態管理控制枱</h1><p class="subtitle">查看模板健康狀態，管理探測範圍與代理出口。</p></div>
+<div><div class="eyebrow">CPA / CODEX TURN-STATE</div><h1>狀態管理控制檯</h1><p class="subtitle">查看模板健康狀態，管理探測範圍與代理出口。</p></div>
 <div class="header-status"><span class="status-pill" id="headerRole">等待狀態</span><div id="headerRefresh"><div class="freshness" id="freshness"></div><button class="btn" id="btnPause" type="button">暫停刷新</button></div></div>
 </header>
-<nav aria-label="控制枱導航" class="dashboard-tabs" role="tablist">
+<nav aria-label="控制檯導航" class="dashboard-tabs" role="tablist">
 <button aria-controls="panel-overview" aria-selected="true" class="tab" data-panel="overview" id="tab-overview" role="tab" type="button"><svg aria-hidden="true" viewbox="0 0 20 20"><path d="M3 11h4V3H3zm0 6h4v-3H3zm7 0h7V9h-7zm0-11h7V3h-7z"></path></svg> <span>概覽</span></button>
 <button aria-controls="panel-scope" aria-selected="false" class="tab" data-panel="scope" id="tab-scope" role="tab" tabindex="-1" type="button"><svg aria-hidden="true" viewbox="0 0 20 20"><path d="M3 5h14M3 10h14M3 15h14M7 3v4m6 1v4m-5 1v4"></path></svg> <span>探測範圍</span></button>
 <button aria-controls="panel-proxies" aria-selected="false" class="tab" data-panel="proxies" id="tab-proxies" role="tab" tabindex="-1" type="button"><svg aria-hidden="true" viewbox="0 0 20 20"><path d="M7 2h6v5H7zM2 13h6v5H2zm10 0h6v5h-6zM10 7v3M5 13v-3h10v3"></path></svg> <span>代理池</span></button>
@@ -1108,13 +1108,13 @@ button.btn.danger {
 <span><i class="swatch st-ok"></i>就緒（顯示剩餘時長）</span>
 <span><i class="swatch st-warn"></i>剩餘不足 10 分鐘</span>
 <span><i class="swatch st-miss"></i>缺失或已過期</span>
-<span><em class="outscope">斜體灰</em> 的行 / 列在探測範圍之外：store 裏有它的桶，下一輪不會去採</span>
+<span><em class="outscope">斜體灰</em> 的行 / 列在探測範圍之外：store 裡有它的桶，下一輪不會去採</span>
 <span>點格子可清空該桶</span>
 </div></div>
 <div id="counterSection"><div class="counters" id="counters"></div><div class="since" id="since"></div></div>
-<div class="panel-card" id="observeCard"><div class="panel-head"><div class="panel-title"><h2>服務態流水</h2><span class="title-rule"></span></div><span class="hint" id="obsSince"></span></div><p class="subtitle">上游每次簽發的狀態。<b>未注入</b>的是自然觀測，能説明上游此刻怎麼對待這個賬號；<b>已注入</b>的不能 —— 那時上游多半不再簽發，沉默即被接受。</p><div id="obsFeed"></div><div class="hint" id="obsEmpty"></div></div>
+<div class="panel-card" id="observeCard"><div class="panel-head"><div class="panel-title"><h2>服務態流水</h2><span class="title-rule"></span></div><span class="hint" id="obsSince"></span></div><p class="subtitle">上游每次簽發的狀態。<b>未注入</b>的是自然觀測，能說明上游此刻怎麼對待這個賬號；<b>已注入</b>的不能 —— 那時上游多半不再簽發，沉默即被接受。</p><div id="obsFeed"></div><div class="hint" id="obsEmpty"></div></div>
 <div class="panel-card" id="activityCard"><div class="panel-head"><div class="panel-title"><h2>探測活動</h2><span class="title-rule"></span></div><span class="hint">保留原始探測日誌</span></div><span class="hint" id="probeProgress"></span><div id="probeLines"></div></div>
-<details class="help-details"><summary>探測與業務處理説明</summary><p>主動探測直接請求上游，不修改 CPA 賬號啓用狀態或代理配置，可與業務並行。首次採集後進入續期檢查。探測會消耗賬號額度；停止探測會停止主動續期，不影響已有模板的使用。</p></details>
+<details class="help-details"><summary>探測與業務處理說明</summary><p>主動探測直接請求上游，不修改 CPA 賬號啟用狀態或代理配置，可與業務並行。首次採集後進入續期檢查。探測會消耗賬號額度；停止探測會停止主動續期，不影響已有模板的使用。</p></details>
 </section>
 <section aria-labelledby="tab-scope" hidden="" id="panel-scope" role="tabpanel">
 <div class="panel-card"><div class="panel-head"><div><h2>探測範圍</h2><p class="subtitle">選擇主動採集的賬號與模型。範圍變更不會清除已有模板。</p></div></div><div class="editor-columns" id="scopeColumns"><div class="scopecol">
@@ -1134,7 +1134,7 @@ button.btn.danger {
 <button class="btn ghost" id="btnAddModel" type="button">添加模型</button>
 </div>
 <div class="hint">
-            原樣提交：不改大小寫、不動橫線。<code>gpt-5.6-sol</code> 裏的橫線是 id
+            原樣提交：不改大小寫、不動橫線。<code>gpt-5.6-sol</code> 裡的橫線是 id
             的一部分，寫成 <code>gpt5.6sol</code> 是另一個（不存在的）模型。
           </div>
 </div></div></div>
@@ -1158,7 +1158,7 @@ button.btn.danger {
 <span class="sublabel">輪換代理（IP 每次都變）</span>
 <span class="hint" id="scopeRotNote"></span>
 </div>
-<textarea aria-label="輪換代理清單，一行一個 URL" autocomplete="off" id="scopeRotating" placeholder="住宅輪換網關放這裏，一行一個" rows="6" spellcheck="false"></textarea>
+<textarea aria-label="輪換代理清單，一行一個 URL" autocomplete="off" id="scopeRotating" placeholder="住宅輪換網關放這裡，一行一個" rows="6" spellcheck="false"></textarea>
 <div class="row addrow">
 <input aria-label="追加輪換代理到清單" autocomplete="off" id="scopeRotAdd" placeholder="貼一條或多條輪換代理，追加到上面" spellcheck="false" type="text"/>
 <button class="btn ghost" id="btnAddRot" type="button">追加</button>
@@ -1169,10 +1169,10 @@ button.btn.danger {
 <div id="proxyResults"><div id="proxyCheck"></div></div>
 <details class="help-details"><summary>查看嘗試與冷卻規則</summary><p>靜態池按出口、賬號和模型組合冷卻 55 分鐘。輪換池每桶一輪最多 10 次，成功後冷卻 55 分鐘，失敗後冷卻 10 分鐘。輪換能力由代理服務提供。兩個池均為空時使用服務器出口。代理地址保持明文可編輯。</p></details>
 </section>
-<div hidden="" id="sharedScopeEditor"><div id="sharedScopeErrors"><div id="scopeErrors"></div></div><div class="scope-savebar"><div class="row" id="saveActions"><button class="btn primary" id="btnScopeSave" type="button">保存全部改動</button><button class="btn" id="btnScopeReset" type="button">放棄改動</button></div><div id="sharedDirty"><span class="hint" id="scopeDirty"></span></div><p class="hint">統一保存探測範圍和代理池的所有未保存改動，不會自動啓動探測。</p></div></div>
+<div hidden="" id="sharedScopeEditor"><div id="sharedScopeErrors"><div id="scopeErrors"></div></div><div class="scope-savebar"><div class="row" id="saveActions"><button class="btn primary" id="btnScopeSave" type="button">保存全部改動</button><button class="btn" id="btnScopeReset" type="button">放棄改動</button></div><div id="sharedDirty"><span class="hint" id="scopeDirty"></span></div><p class="hint">統一保存探測範圍和代理池的所有未保存改動，不會自動啟動探測。</p></div></div>
 <section aria-labelledby="tab-settings" hidden="" id="panel-settings" role="tabpanel">
 <div class="panel-card"><div class="panel-head"><h2>運行參數</h2></div><div id="settingsBadges"><div class="badges" id="badges"></div></div>
-<div class="settings-row"><div><h3>請求改寫</h3><p>開啓模擬運行後僅記錄決策，不實際改寫請求。</p></div><div id="dryAction"><button class="btn" id="btnDryRun" type="button">翻 dry_run</button></div></div>
+<div class="settings-row"><div><h3>請求改寫</h3><p>開啟模擬運行後僅記錄決策，不實際改寫請求。</p></div><div id="dryAction"><button class="btn" id="btnDryRun" type="button">翻 dry_run</button></div></div>
 <div class="settings-row"><div><h3>運行角色</h3><p>業務模式執行請求頭改寫，探測模式不改寫請求。</p></div><div id="roleAction"><button class="btn" id="btnRole" type="button">切 role</button></div></div>
 </div>
 <div class="panel-card"><div class="panel-head"><div><h2>連通性自檢</h2><p class="subtitle">驗證上游可達性，不採集模板。會消耗賬號額度。</p></div></div><div class="row panel-content" id="diagnosticActions"><select aria-label="自檢賬號" id="selftestAuth"></select><select aria-label="自檢模型" id="selftestModel"></select><button class="btn ghost" id="btnSelftest" type="button">連通性自檢</button></div></div>
@@ -1195,10 +1195,10 @@ button.btn.danger {
 "use strict";
 
 var POLL_MS = 10000;
-// /ops/choices 比 status 冷得多（CPA 手裏的憑據一天也未必變一次），所以它不跟着
+// /ops/choices 比 status 冷得多（CPA 手裡的憑據一天也未必變一次），所以它不跟著
 // status 每 10 秒刷一次，最快 60 秒一次。另外兩種情況乾脆不讀：
 //   · 表單被動過     —— 清單一換，勾選框就要重建，會打斷正在點的人。
-//   · 探測跑着的時候 —— 範圍已定死、表單是鎖的（見 renderProbe），此時重建勾選框
+//   · 探測跑著的時候 —— 範圍已定死、表單是鎖的（見 renderProbe），此時重建勾選框
 //                      既沒意義又會打斷，索性不讀。
 var CHOICES_MS = 60000;
 
@@ -1240,7 +1240,7 @@ function clear(n) { while (n.firstChild) { n.removeChild(n.firstChild); } }
 
 /* ---------------------------- 格式化 ---------------------------- */
 
-// seconds_left 只在矩陣格子裏顯示，寬度有限，所以取最短可讀形式。
+// seconds_left 只在矩陣格子裡顯示，寬度有限，所以取最短可讀形式。
 function fmtLeft(sec) {
   if (sec === null || sec === undefined || !isFinite(sec) || sec <= 0) { return "—"; }
   var s = Math.floor(sec);
@@ -1278,7 +1278,7 @@ function fmtAgo(d) {
 /* ---------------------------- 通知條 ---------------------------- */
 
 // opts.copy = {text, label} 時多掛一個複製按鈕，並且這條通知不自動消失 ——
-// 一條要人照着敲的命令，6 秒後自己跑掉是最氣人的。
+// 一條要人照著敲的命令，6 秒後自己跑掉是最氣人的。
 function notify(kind, message, opts) {
   opts = opts || {};
   var box = $("notices");
@@ -1301,14 +1301,14 @@ function notify(kind, message, opts) {
   close.addEventListener("click", function () { line.remove(); });
   line.appendChild(close);
   box.appendChild(line);
-  // 成功類提示會話性地自己消失；錯誤留着，等人看。
+  // 成功類提示會話性地自己消失；錯誤留著，等人看。
   if (kind === "ok" && !opts.copy) { setTimeout(function () { line.remove(); }, 6000); }
   return line;
 }
 
 // navigator.clipboard 在非安全上下文里根本不存在（http:// + 非 localhost 就是），
 // 而這個看板經常是通過隧道或內網 IP 打開的，所以必須有退路：失敗就返回 false，
-// 讓調用方老實説「複製失敗」，而不是假裝成功。
+// 讓調用方老實說「複製失敗」，而不是假裝成功。
 function copyToClipboard(text) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     return navigator.clipboard.writeText(text).then(
@@ -1359,7 +1359,7 @@ function confirmDialog(opts) {
 
     function done(v) {
       modal.hidden = true;
-      input.value = "";           // 不把輸入內容留在 DOM 裏
+      input.value = "";           // 不把輸入內容留在 DOM 裡
       input.hidden = true;
       ok.removeEventListener("click", onOk);
       cancel.removeEventListener("click", onCancel);
@@ -1399,13 +1399,13 @@ function confirmDialog(opts) {
 //   ops/scope             保存探測範圍
 //   ops/probe/start       ops/probe/cancel  插件內探測
 //
-// 這就是為什麼這裏沒有 ensureKey / setKey / mgmtSend 之類的東西：不是忘了寫，
-// 是不能有。任何在這裏重新引入密鑰輸入的改動，都請先回去看 management.go 頂部。
+// 這就是為什麼這裡沒有 ensureKey / setKey / mgmtSend 之類的東西：不是忘了寫，
+// 是不能有。任何在這裡重新引入密鑰輸入的改動，都請先回去看 management.go 頂部。
 //
 // 代理明文現在【也走 status】，是操作員明確要求的：之前顯示掩碼，代價是改一條
 // 代理就得把整個池子重打一遍，那個編輯框基本沒法用。所以這份清單現在對任何夠得
-// 到本插件的東西都是可讀的 —— CPA 只綁 127.0.0.1，能讀到的前提是已經在這台機器
-// 上。探測自己要用的兩把鑰匙放在插件配置裏，頁面既不顯示也不經手。
+// 到本插件的東西都是可讀的 —— CPA 只綁 127.0.0.1，能讀到的前提是已經在這臺機器
+// 上。探測自己要用的兩把鑰匙放在插件配置裡，頁面既不顯示也不經手。
 
 // ApiError 攜帶服務端原話。403 的原因有好幾種（遠程管理關閉、IP 被封 30 分鐘），
 // 自己改寫成「失敗」會把排障線索丟掉，所以一律原樣透出。
@@ -1445,15 +1445,15 @@ function qs(params) {
   return parts.length ? ("?" + parts.join("&")) : "";
 }
 
-// 不鑑權的 resource 接口：GET-only，不帶任何鑑權頭。status 和四個操作都走這裏。
+// 不鑑權的 resource 接口：GET-only，不帶任何鑑權頭。status 和四個操作都走這裡。
 function resGet(path, params) {
   return fetch(RES + path + qs(params), { method: "GET", cache: "no-store" })
     .then(readResponse);
 }
 
 // 不鑑權的【動作】接口：GET + confirm=1，同樣不帶任何鑑權頭。四個操作
-// （dry_run / role / clear / selftest）走這裏 —— 用户明確要求頁面上這幾個操作不
-// 彈密鑰。它們改狀態或燒額度，所以固定帶 confirm=1：那不是鑑權（這台機器只綁
+// （dry_run / role / clear / selftest）走這裡 —— 用戶明確要求頁面上這幾個操作不
+// 彈密鑰。它們改狀態或燒額度，所以固定帶 confirm=1：那不是鑑權（這臺機器只綁
 // 127.0.0.1、要走 SSH 隧道才夠得到），只是擋住瀏覽器預取 / 爬蟲 / 誤打開 URL 觸發。
 // 探測範圍（尤其代理明文）不在此列，仍走鑑權接口。
 function resAction(path, params) {
@@ -1504,8 +1504,8 @@ function renderFreshness() {
   }
 }
 
-// 賬號清單沒有專門的接口，就從 buckets 裏去重得出 —— 矩陣的行和自檢的賬號
-// 下拉必須是同一份，否則會出現「矩陣裏有的號，下拉里選不到」。
+// 賬號清單沒有專門的接口，就從 buckets 裡去重得出 —— 矩陣的行和自檢的賬號
+// 下拉必須是同一份，否則會出現「矩陣裡有的號，下拉里選不到」。
 function uniqueAuthIds(buckets) {
   var out = [];
   var seen = Object.create(null);
@@ -1516,7 +1516,7 @@ function uniqueAuthIds(buckets) {
   return out;
 }
 
-// 去重但保留原順序。模型列用它：models 在 config.yaml 裏是人排過的順序，
+// 去重但保留原順序。模型列用它：models 在 config.yaml 裡是人排過的順序，
 // 排序會讓矩陣的列跟配置文件對不上號。
 function uniqKeep(list) {
   var seen = Object.create(null);
@@ -1529,10 +1529,10 @@ function uniqKeep(list) {
 
 /* ---------------------------- 服務態 ---------------------------- */
 
-// 超過這麼久沒有任何觀測 —— 這個桶最近沒有流量，説不上正常也説不上受限。
+// 超過這麼久沒有任何觀測 —— 這個桶最近沒有流量，說不上正常也說不上受限。
 var OBS_UNKNOWN_MS = 2 * 3600 * 1000;
 // 自然觀測超過這麼久就不能再當現狀用。上游簽發的狀態有效期是一小時量級，
-// 十五分鐘前的那次「正常」不足以説明此刻。
+// 十五分鐘前的那次「正常」不足以說明此刻。
 var OBS_STALE_MS = 15 * 60 * 1000;
 
 function fmtAgo(ms) {
@@ -1567,8 +1567,8 @@ function obs24h(o) {
 
 // observedState 把一格的觀測化成「此刻該顯示什麼」。
 //
-// 它存在的全部理由是那個盲區：桶裏有活模板的時候，每個請求都被注入、上游因此
-// 不再簽發，這一側什麼都看不到 —— 最長一個 TTL。這段時間裏沿用上一次「正常」
+// 它存在的全部理由是那個盲區：桶裡有活模板的時候，每個請求都被注入、上游因此
+// 不再簽發，這一側什麼都看不到 —— 最長一個 TTL。這段時間裡沿用上一次「正常」
 // 就是拿一小時前的結論冒充現狀，所以盲區必須自己佔一個狀態。
 //
 // 關鍵的一點：判新鮮度用的是 last_signed_*（上游簽發過狀態的最近一次，不論那
@@ -1576,7 +1576,7 @@ function obs24h(o) {
 // 仍然簽了新的 292，這是「它正常服務這個賬號」最直接的證據；只認自然觀測就會
 // 把這份證據當成沒有，讓一個健康的桶在手握實證的時候顯示盲區。
 //
-// dryRun 必須傳進來。dry_run 下桶裏有模板但我們從不注入，此時的沉默是上游自己
+// dryRun 必須傳進來。dry_run 下桶裡有模板但我們從不注入，此時的沉默是上游自己
 // 的行為，不是我們造成的盲區 —— 而 dry_run 恰恰是運維用來「只看不碰」的模式。
 //
 // 判定順序：無數據 → 無流量 → 新鮮讀數（報警在其中）→ 盲區 → 陳舊。
@@ -1589,7 +1589,7 @@ function observedState(b, dryRun) {
 
   var now = Date.now();
   var last = Date.parse(o.last_at);                                     // 有沒有流量
-  var signed = o.last_signed_at ? Date.parse(o.last_signed_at) : NaN;   // 上游説過什麼
+  var signed = o.last_signed_at ? Date.parse(o.last_signed_at) : NaN;   // 上游說過什麼
   var natN = (o.natural_normal || 0) + (o.natural_limited || 0) + (o.natural_other || 0);
   var nSuffix = natN ? "  n=" + natN : "";
 
@@ -1603,7 +1603,7 @@ function observedState(b, dryRun) {
     var ageText = fmtAgo(now - signed) + "前";
     var via = o.last_signed_wrote ? "在一個我們注入過的請求上" : "主動";
 
-    // 最重要的一條。我們給了有效模板，上游仍然發回受限態 —— 説明這個桶不是
+    // 最重要的一條。我們給了有效模板，上游仍然發回受限態 —— 說明這個桶不是
     // 「缺模板」，是真的被限；補模板救不了它。
     if (o.last_signed_kind === "limited" && o.last_signed_wrote) {
       return { cls: "obs-alarm", label: "▲ 受限 · 模板失效",
@@ -1623,11 +1623,11 @@ function observedState(b, dryRun) {
                title: "上游" + via + "簽發的是正常狀態（292 字符），" + ageText + "。" + obs24h(o) };
     }
     // 既不是 292 也不是 312。可能是上游改了格式，也可能是 template_length /
-    // replace_length 配錯了。兩種都不能説成正常。
+    // replace_length 配錯了。兩種都不能說成正常。
     return { cls: "obs-bad", label: "? 未知格式 (" + (o.last_len || 0) + ")" + nSuffix,
              title: "上游" + via + "簽發了 " + (o.last_len || 0) + " 字符的狀態，" + ageText + "，\n"
                   + "既不是正常態（292）也不是受限態（312）。\n"
-                  + "要麼上游換了格式，要麼配置裏的 template_length / replace_length 對不上了 ——\n"
+                  + "要麼上游換了格式，要麼配置裡的 template_length / replace_length 對不上了 ——\n"
                   + "在弄清楚之前，這一格的正常與否無法判斷。" + obs24h(o) };
   }
 
@@ -1637,16 +1637,16 @@ function observedState(b, dryRun) {
 
   if (b.ready && !dryRun && trafficFresh) {
     return { cls: "obs-blind", label: "◌ 注入中 · 盲區 " + blindFor,
-             title: "桶裏有活模板，每個請求都被注入，上游因此不再簽發新狀態 —— 這段時間看不到真實服務態。\n"
+             title: "桶裡有活模板，每個請求都被注入，上游因此不再簽發新狀態 —— 這段時間看不到真實服務態。\n"
                   + "不是「正常」，是「不知道」。\n"
                   + (isFinite(signed) ? ("上次簽發：" + blindFor + "前（" + obsKindName(o.last_signed_kind) + "）\n") : "")
                   + "注入後上遊未再簽發 " + (o.injected_silent || 0) + " 次。\n"
-                  + "通常意味着模板被接受了，但這是推斷 —— 沉默本身不是證據。" + obs24h(o) };
+                  + "通常意味著模板被接受了，但這是推斷 —— 沉默本身不是證據。" + obs24h(o) };
   }
 
   if (b.ready && dryRun && trafficFresh) {
     return { cls: "obs-blind", label: "◌ 有模板 · 未注入 " + blindFor,
-             title: "dry_run 開着，桶裏的模板沒有被用出去，所以這段沉默是上游自己的行為，不是我們造成的盲區。\n"
+             title: "dry_run 開著，桶裡的模板沒有被用出去，所以這段沉默是上游自己的行為，不是我們造成的盲區。\n"
                   + "上游就是沒有簽發新狀態。\n"
                   + (isFinite(signed) ? ("上次簽發：" + blindFor + "前（" + obsKindName(o.last_signed_kind) + "）") : "") + obs24h(o) };
   }
@@ -1659,11 +1659,11 @@ function observedState(b, dryRun) {
                   + obs24h(o) };
   }
 
-  // 有流量、桶是空的、上游也不簽發。只能報最後看到的，並説清它已經舊了。
+  // 有流量、桶是空的、上游也不簽發。只能報最後看到的，並說清它已經舊了。
   var stale = isFinite(signed) ? obsKindName(o.last_signed_kind) : "—";
   return { cls: "obs-blind", label: "· " + stale + "（陳舊）" + nSuffix,
            title: "最後一次簽發是" + (isFinite(signed) ? (fmtAgo(now - signed) + "前") : "很久以前")
-                + "的「" + stale + "」，已經不能代表此刻。\n桶是空的，所以也不在注入盲區裏。" + obs24h(o) };
+                + "的「" + stale + "」，已經不能代表此刻。\n桶是空的，所以也不在注入盲區裡。" + obs24h(o) };
 }
 
 function renderMatrix(d) {
@@ -1679,8 +1679,8 @@ function renderMatrix(d) {
 
   var rows = cfgAccts.length ? cfgAccts : seenAccts;
   var cols = cfgModels.length ? cfgModels : seenModels;
-  // 範圍外的行 / 列：store 裏有桶，但不在清單裏。照樣畫出來 —— 這類漂移
-  // （模型改了名、賬號被摘掉）只有在這裏能被看見。
+  // 範圍外的行 / 列：store 裡有桶，但不在清單裡。照樣畫出來 —— 這類漂移
+  // （模型改了名、賬號被摘掉）只有在這裡能被看見。
   var extraRows = cfgAccts.length
     ? seenAccts.filter(function (a) { return rows.indexOf(a) < 0; }) : [];
   var extraCols = cfgModels.length
@@ -1695,7 +1695,7 @@ function renderMatrix(d) {
 
   var ready = 0;                  // 範圍內就緒
   var total = rows.length * cols.length;
-  var outsideReady = 0;           // 範圍外但 store 裏有的
+  var outsideReady = 0;           // 範圍外但 store 裡有的
   var outsideTotal = 0;
 
   var table = $("matrix");
@@ -1709,7 +1709,7 @@ function renderMatrix(d) {
     hr.appendChild(el("th", {
       cls: "model" + (outside ? " outscope" : ""),
       text: m,
-      attrs: outside ? { title: m + "\n不在 models 清單裏 —— store 裏有它的桶，但下一輪不會去採" } : { title: m }
+      attrs: outside ? { title: m + "\n不在 models 清單裡 —— store 裡有它的桶，但下一輪不會去採" } : { title: m }
     }));
   });
   thead.appendChild(hr);
@@ -1724,7 +1724,7 @@ function renderMatrix(d) {
       text: acct,
       attrs: {
         title: rowOutside
-          ? (acct + "\n不在 probe_accounts 裏 —— store 裏有它的桶，但下一輪不會去採")
+          ? (acct + "\n不在 probe_accounts 裡 —— store 裡有它的桶，但下一輪不會去採")
           : acct
       }
     }));
@@ -1786,8 +1786,8 @@ function renderMatrix(d) {
   table.appendChild(tbody);
 
   // 目標桶數嚴格按 len(probe_accounts) × len(models) 算 —— 探測要採的就是這個
-  // 叉積。任何一邊沒配就給不出這個數，那時寧可寫「—」並説清缺什麼，也不要拿
-  // 別的數（比如 store 裏已有的賬號數）頂上去冒充目標。
+  // 叉積。任何一邊沒配就給不出這個數，那時寧可寫「—」並說清缺什麼，也不要拿
+  // 別的數（比如 store 裡已有的賬號數）頂上去冒充目標。
   var targetWhy = "";
   if (!hasField(d, "probe_accounts")) {
     targetWhy = "當前 .so 的 status 不報 probe_accounts";
@@ -1803,7 +1803,7 @@ function renderMatrix(d) {
   var s = $("summary");
   clear(s);
   if (allRows.length === 0 && allCols.length === 0) {
-    s.appendChild(el("span", { text: "既沒有配探測範圍，store 裏也還沒有任何桶 —— 探測尚未跑過，或 store_dir 為空。" }));
+    s.appendChild(el("span", { text: "既沒有配探測範圍，store 裡也還沒有任何桶 —— 探測尚未跑過，或 store_dir 為空。" }));
   } else {
     s.appendChild(el("span", { text: "就緒 " }));
     s.appendChild(el("b", { text: ready + "/" + total }));
@@ -1866,7 +1866,7 @@ function renderObservationFeed(d) {
       cls: "tag", text: e.wrote ? "已注入" : "未注入",
       attrs: {
         title: e.wrote
-          ? "這次請求帶着我們注入的模板出去。上游此後簽發的東西不算自然觀測。"
+          ? "這次請求帶著我們注入的模板出去。上游此後簽發的東西不算自然觀測。"
           : "這次請求沒有被改寫，上游簽發的是它自己的判斷 —— 這才是自然觀測。"
       }
     }));
@@ -1887,7 +1887,7 @@ function renderCounters(d) {
     });
   var since = $("since");
   clear(since);
-  since.appendChild(el("span", { text: "統計自 " + fmtTime(c.since || d.counters_since) + "（進程內計數，重啓 CPA 會歸零）" }));
+  since.appendChild(el("span", { text: "統計自 " + fmtTime(c.since || d.counters_since) + "（進程內計數，重啟 CPA 會歸零）" }));
 }
 
 function renderSelftestAuths(d) {
@@ -1908,7 +1908,7 @@ function renderSelftestAuths(d) {
     // 首次填充：落在第一個具體賬號上。
     sel.value = accounts.length ? accounts[0] : "";
   } else if (prev === "" || accounts.indexOf(prev) >= 0) {
-    sel.value = prev;           // 用户的選擇（含明確選的「不指定」）要保住
+    sel.value = prev;           // 用戶的選擇（含明確選的「不指定」）要保住
   } else {
     sel.value = accounts.length ? accounts[0] : "";
   }
@@ -1927,7 +1927,7 @@ function renderSelftestModels(d) {
 /* ---------------------------- 探測範圍 ---------------------------- */
 
 // 這三項是【探測範圍】，不是業務開關：只決定下一輪探測去採哪些桶。業務端替不
-// 替換隻看 store 裏有沒有桶，跟這裏無關。
+// 替換隻看 store 裡有沒有桶，跟這裡無關。
 //
 // 值的來源分兩條：
 //   賬號 / 模型 —— 勾選，候選清單來自 /ops/choices（服務端問 CPA 要的真實憑據
@@ -1935,21 +1935,21 @@ function renderSelftestModels(d) {
 //                  status 的 probe_accounts / models / buckets 推。
 //   代理       —— 明文，一行一個，status 直接回傳原值。沒動過時 diff 為空。
 //
-// 勾選清單裏的每一項都有兩個字符串，不能混：
-//   name —— 提交值。賬號的 name 是憑據文件名，【含客户郵箱】。
+// 勾選清單裡的每一項都有兩個字符串，不能混：
+//   name —— 提交值。賬號的 name 是憑據文件名，【含客戶郵箱】。
 //   text —— 顯示值。choices 給的 label（服務端已經把郵箱去掉了）。
-// 渲染只碰 text；name 只活在 JS 裏，既不渲染也不寫進 DOM 屬性。
+// 渲染只碰 text；name 只活在 JS 裡，既不渲染也不寫進 DOM 屬性。
 
 var scope = {
   // 規範化後的候選項：{name, text, disabled, missing}，順序即提交順序。
   acctItems: [],
   acctSelected: Object.create(null),
-  hasAccounts: false,       // status 裏有沒有 probe_accounts（舊 .so 沒有）
+  hasAccounts: false,       // status 裡有沒有 probe_accounts（舊 .so 沒有）
   modelItems: [],
   modelSelected: Object.create(null),
-  extraModels: [],          // 手填進來、清單裏還沒有的模型 id
+  extraModels: [],          // 手填進來、清單裡還沒有的模型 id
   hasProxyFields: false,
-  // 明文。status 直接回傳原值，所以這裏就是真值，沒動過時 diff 為空。
+  // 明文。status 直接回傳原值，所以這裡就是真值，沒動過時 diff 為空。
   proxyText: "",
   rotText: "",
   hasRotField: false,
@@ -1967,7 +1967,7 @@ function hasField(obj, k) {
   return !!obj && Object.prototype.hasOwnProperty.call(obj, k);
 }
 
-// 服務端給的字符串列表原樣取用：不 trim、不改大小寫。這裏的值是模型 id 和賬號
+// 服務端給的字符串列表原樣取用：不 trim、不改大小寫。這裡的值是模型 id 和賬號
 // 文件名，任何「順手規範化」都會在保存時被當成一次真實改動寫回配置。
 function strList(v) {
   var out = [];
@@ -2015,7 +2015,7 @@ function parseLines(text) {
 function looksMasked(s) { return String(s).indexOf("***") >= 0; }
 
 // 賬號一側能不能編輯，只取決於當前 .so 的 status 報不報 probe_accounts。
-// 舊 .so 不報時不要把複選框顯示成「全都沒勾」—— 那看着像人自己沒選。
+// 舊 .so 不報時不要把複選框顯示成「全都沒勾」—— 那看著像人自己沒選。
 function scopeAccountsEditable() { return scope.hasAccounts; }
 
 // 勾選順序 = 清單順序。提交的就是這個數組，服務端怎麼列的就怎麼發回去。
@@ -2042,9 +2042,9 @@ function countMissing(items) {
 
 /* ------------------------- /ops/choices 與候選項 ------------------------- */
 
-// 只有「拿到了清單、路由存在、服務端沒報錯」才算可用。error 非空説明服務端夠不
+// 只有「拿到了清單、路由存在、服務端沒報錯」才算可用。error 非空說明服務端夠不
 // 到 CPA 的憑據清單，那時 accounts 多半是空的 —— 把一個空清單當真，會讓所有已
-// 配的賬號都顯示成「清單裏沒有」，還不如整塊退回舊來源，並把原話説出來。
+// 配的賬號都顯示成「清單裡沒有」，還不如整塊退回舊來源，並把原話說出來。
 function usingChoices() {
   return !!(scope.choices && !scope.choicesErr && !scope.choicesMissing);
 }
@@ -2070,14 +2070,14 @@ function choiceList(v) {
   return out;
 }
 
-// 只在沒有 label 可用時才走這裏：把 user@host 那一段換成省略號。賬號名形如
+// 只在沒有 label 可用時才走這裡：把 user@host 那一段換成省略號。賬號名形如
 // codex-620f5a42-someone@example.com-pro.json，掐掉中段還剩得下前綴和後綴，
-// 夠在矩陣裏對上號，又不會把客户郵箱印在勾選清單上。
+// 夠在矩陣裡對上號，又不會把客戶郵箱印在勾選清單上。
 function elideName(name) {
   return String(name).replace(/[^\s\-@]+@[^\s\-@]+/, "…");
 }
 
-// choices 的條目 + 配置裏選着、但清單裏沒有的條目。後者必須補進來並標出來：
+// choices 的條目 + 配置裡選著、但清單裡沒有的條目。後者必須補進來並標出來：
 // 一個靜悄悄消失的賬號 = 探測範圍被無聲縮小，而頁面上看不出發生過什麼。
 // secret=true 的那一側（賬號）沒有 label 就就地縮寫，絕不整串顯示。
 function itemsFromChoices(list, cfgNames, secret) {
@@ -2106,8 +2106,8 @@ function itemsFromChoices(list, cfgNames, secret) {
   return out;
 }
 
-// 退回路徑的候選項。這一側沒有 label 可用 —— status 裏就只有文件名，而矩陣那
-// 一列本來也印着同一個字符串，所以這裏原樣顯示，不額外縮寫：縮寫會讓兩個只有
+// 退回路徑的候選項。這一側沒有 label 可用 —— status 裡就只有文件名，而矩陣那
+// 一列本來也印著同一個字符串，所以這裡原樣顯示，不額外縮寫：縮寫會讓兩個只有
 // 郵箱段不同的賬號在清單里長得一模一樣。
 function itemsFromNames(names) {
   var out = [];
@@ -2118,7 +2118,7 @@ function itemsFromNames(names) {
 }
 
 // 永遠 resolve：清單讀不到不該把整次刷新拖成失敗態 —— status 還在，頁面照常能
-// 用，只是勾選清單退回舊來源。失敗原因記在 scope 上，由 renderScopeMeta 説出來。
+// 用，只是勾選清單退回舊來源。失敗原因記在 scope 上，由 renderScopeMeta 說出來。
 function fetchChoices(force) {
   var now = Date.now();
   if (!force) {
@@ -2135,7 +2135,7 @@ function fetchChoices(force) {
     scope.choicesErr = (typeof c.error === "string") ? c.error : "";
     scope.choicesMissing = false;
   }).catch(function (err) {
-    // 404 和別的錯必須分開説：前者是「這個 .so 還沒有這個功能」，換 .so 才有；
+    // 404 和別的錯必須分開說：前者是「這個 .so 還沒有這個功能」，換 .so 才有；
     // 後者是「有這個功能但這次沒讀到」，要去看服務端。糊成一句會讓人找錯方向。
     var gone = (err instanceof ApiError) && err.status === 404;
     scope.choices = null;
@@ -2145,10 +2145,10 @@ function fetchChoices(force) {
 }
 
 // 清單讀不到時那句解釋。跟探測那一節「當前 .so 的 status 不返回 probe_run」
-// 是同一個套路：把降級説成一句人話，就地掛在相關控件旁邊。
+// 是同一個套路：把降級說成一句人話，就地掛在相關控件旁邊。
 function choicesWarning() {
   if (scope.choicesMissing) {
-    return "當前 .so 沒有 /ops/choices —— 賬號和模型退回按 status 報的清單列（照舊能勾能存，只是名字是 CPA 報什麼就是什麼，沒法核對哪個號還在）。換成新的 .so 並重啓 CPA 才有。";
+    return "當前 .so 沒有 /ops/choices —— 賬號和模型退回按 status 報的清單列（照舊能勾能存，只是名字是 CPA 報什麼就是什麼，沒法核對哪個號還在）。換成新的 .so 並重啟 CPA 才有。";
   }
   if (scope.choicesErr) {
     return "服務端讀不到可選清單，已退回按 status 報的清單列：" + scope.choicesErr;
@@ -2162,7 +2162,7 @@ function bucketModels(buckets) {
   return out;
 }
 
-// 每次刷新都跑。候選清單跟着狀態走，但【人動過之後就不再覆蓋已勾選的值】——
+// 每次刷新都跑。候選清單跟著狀態走，但【人動過之後就不再覆蓋已勾選的值】——
 // 10 秒一次的輪詢把正在填的表單刷掉，是最容易讓人存錯東西的做法。
 function syncScope(d) {
   scope.hasAccounts = hasField(d, "probe_accounts");
@@ -2171,14 +2171,14 @@ function syncScope(d) {
 
   if (usingChoices()) {
     // 順序就是服務端列出來的順序，一個字都不重排 —— 保存時提交的就是它。
-    // 配置裏選着但清單裏沒有的補在末尾（itemsFromChoices 裏標 missing）。
+    // 配置裡選著但清單裡沒有的補在末尾（itemsFromChoices 裡標 missing）。
     scope.acctItems = itemsFromChoices(scope.choices.accounts, cfgAccts, true);
     scope.modelItems = itemsFromChoices(scope.choices.models,
       cfgModels.concat(scope.extraModels), false);
   } else {
     // 退回路徑：/ops/choices 沒有或讀不到，清單隻能從 status 推。這是它出現之
     // 前的行為，原樣保留 —— 舊 .so 上這個頁面必須照常能用。
-    // 點了名但一個桶都沒有的賬號也要出現在清單裏，否則「我明明選了它」沒處看。
+    // 點了名但一個桶都沒有的賬號也要出現在清單裡，否則「我明明選了它」沒處看。
     scope.acctItems = itemsFromNames(uniqSorted(uniqueAuthIds(d.buckets).concat(cfgAccts)));
     scope.modelItems = itemsFromNames(
       uniqSorted(cfgModels.concat(bucketModels(d.buckets), scope.extraModels)));
@@ -2193,8 +2193,8 @@ function syncScope(d) {
 
   var sel = Object.create(null);
   cfgAccts.forEach(function (a) { sel[a] = true; });
-  // choices 裏的 selected 只在 status 不報 probe_accounts 時才用得上。勾選狀態
-  // 必須和 scopeDiff 的基線（status）同源：兩邊各説各的，會讓一個沒動過的表單
+  // choices 裡的 selected 只在 status 不報 probe_accounts 時才用得上。勾選狀態
+  // 必須和 scopeDiff 的基線（status）同源：兩邊各說各的，會讓一個沒動過的表單
   // 顯示成「有未保存的改動」，然後被存回一次誰也沒要的改動。
   if (!scope.hasAccounts && usingChoices()) {
     scope.choices.accounts.forEach(function (c) { if (c.selected) { sel[c.name] = true; } });
@@ -2205,8 +2205,8 @@ function syncScope(d) {
   cfgModels.forEach(function (m) { msel[m] = true; });
   scope.modelSelected = msel;
 
-  // 明文回填。這裏曾經顯示掩碼，代價是每次想改一條代理都得把整個池子重打一遍
-  // —— 操作員明確要求改掉。status 現在直接回傳原值，所以框裏就是真值：沒動過
+  // 明文回填。這裡曾經顯示掩碼，代價是每次想改一條代理都得把整個池子重打一遍
+  // —— 操作員明確要求改掉。status 現在直接回傳原值，所以框裡就是真值：沒動過
   // 時 diff 為空，改一行也就只是改一行。
   scope.proxyText = strList(d.probe_proxies).join("\n");
   scope.rotText = strList(d.probe_proxies_rotating).join("\n");
@@ -2224,16 +2224,16 @@ function checksSig(items, selected, disabled) {
 
 // 上一次渲染出來的順序，按 box 記。重建之後靠它把焦點放回【同一項】—— 按下標
 // 放回去會在清單長短變化時落到隔壁那一行，那比丟焦點更糟：下一次空格就勾錯號
-// 了。名字只留在這個閉包裏，不寫進 DOM 屬性。
+// 了。名字只留在這個閉包裡，不寫進 DOM 屬性。
 var renderedNames = Object.create(null);
 
 function checkTitle(it) {
   var bits = [it.text];
   if (it.disabled) {
-    bits.push("這個憑據在 CPA 裏是停用的。仍然可以勾 —— 停用只是 CPA 不給它派業務流量，探測是點名探的，照樣探得到。");
+    bits.push("這個憑據在 CPA 裡是停用的。仍然可以勾 —— 停用只是 CPA 不給它派業務流量，探測是點名探的，照樣探得到。");
   }
   if (it.missing) {
-    bits.push("配置裏選着它，但服務端的清單裏沒有這一項。這裏照樣勾着，免得一次刷新就把探測範圍悄悄縮小了；真要去掉，取消勾選再保存。");
+    bits.push("配置裡選著它，但服務端的清單裡沒有這一項。這裡照樣勾著，免得一次刷新就把探測範圍悄悄縮小了；真要去掉，取消勾選再保存。");
   }
   return bits.join("\n");
 }
@@ -2268,17 +2268,17 @@ function renderChecks(boxId, sigKey, items, selected, disabled, emptyText, onTog
     var cb = el("input", { attrs: { type: "checkbox" } });
     cb.checked = !!selected[it.name];
     // 整體停用（舊 .so 報不出 probe_accounts）才禁用勾選框。條目自己的
-    // it.disabled 是 CPA 裏的啓用位，只掛個標，不擋勾。
+    // it.disabled 是 CPA 裡的啟用位，只掛個標，不擋勾。
     cb.disabled = !!disabled;
     cb.addEventListener("change", function () { onToggle(it.name, cb.checked); });
     if (focusName && it.name === focusName) { refocus = cb; }
 
-    // 只顯示 it.text。賬號的 it.name 是憑據文件名【含客户郵箱】，它是提交值，
+    // 只顯示 it.text。賬號的 it.name 是憑據文件名【含客戶郵箱】，它是提交值，
     // 不進 DOM —— 不做二次查詢、不顯示除這個短名以外的任何賬號信息，更沒有
     // 任何 token。
     var kids = [cb, el("span", { text: it.text, attrs: { title: it.text } })];
     if (it.disabled) { kids.push(el("i", { cls: "tag off", text: "CPA 已停用" })); }
-    if (it.missing) { kids.push(el("i", { cls: "tag gone", text: "清單裏沒有" })); }
+    if (it.missing) { kids.push(el("i", { cls: "tag gone", text: "清單裡沒有" })); }
     box.appendChild(el("label", {
       cls: "check" + (it.disabled ? " isoff" : ""),
       attrs: { title: checkTitle(it) }
@@ -2295,7 +2295,7 @@ function renderScopeChecks() {
   var acctOff = !scopeAccountsEditable();
   renderChecks("scopeAccounts", "acctSig", scope.acctItems, scope.acctSelected, acctOff,
     usingChoices()
-      ? "服務端説 CPA 手裏一個 Codex 憑據都沒有。"
+      ? "服務端說 CPA 手裡一個 Codex 憑據都沒有。"
       : "一個賬號都沒有 —— CPA 沒報賬號列表，store 也是空的。",
     function (name, on) { scope.acctSelected[name] = on; onScopeEdited(); });
   renderChecks("scopeModels", "modelSig", scope.modelItems, scope.modelSelected, false,
@@ -2382,20 +2382,20 @@ function renderProxyCheck() {
       text: "整批跑到時間上限了 —— 下面若有沒跑完的，那是沒測到，不是不通。" }));
   }
   // 池子條數多、出口地址少 = 好幾條代理其實共用一個出口。探測把它們當成不同出口
-  // 輪着試，實際上是同一個地址被連着打 —— 花了錢卻沒換到出口的典型形態，而這是
+  // 輪著試，實際上是同一個地址被連著打 —— 花了錢卻沒換到出口的典型形態，而這是
   // 頁面上唯一能看出來的地方。
   if (d.mismatches) {
     box.appendChild(el("div", { cls: "pcsum warntext",
-      text: "有 " + d.mismatches + " 條放錯了池子（見下面帶 ⚠ 的行）。放在靜態池裏的輪換代理，" +
+      text: "有 " + d.mismatches + " 條放錯了池子（見下面帶 ⚠ 的行）。放在靜態池裡的輪換代理，" +
             "每個桶 55 分鐘只會被試一次，白白浪費掉它每次換 IP 的能力。" }));
   }
-  // 只對靜態池説這句。輪換池本來就該每次都不一樣，拿它算「去重後幾個出口」
+  // 只對靜態池說這句。輪換池本來就該每次都不一樣，拿它算「去重後幾個出口」
   // 只是在複述有幾條輪換代理，沒有信息量。
   var staticN = Number(d.static_checked) || 0;
   if (!d.direct && d.distinct_ips > 0 && staticN > 1 && d.distinct_ips < staticN) {
     box.appendChild(el("div", { cls: "pcsum warntext",
-      text: "注意：靜態池裏 " + staticN + " 條只落在 " + d.distinct_ips +
-            " 個出口地址上。地址相同的幾條，對上游來説是同一個出口。" }));
+      text: "注意：靜態池裡 " + staticN + " 條只落在 " + d.distinct_ips +
+            " 個出口地址上。地址相同的幾條，對上游來說是同一個出口。" }));
   }
 
   var list = el("div", { cls: "pclist" });
@@ -2442,20 +2442,20 @@ function renderScopeMeta(d) {
   } else {
     aText = "已選 " + selA.length + " / 候選 " + scope.acctItems.length;
     var aGone = countMissing(scope.acctItems);
-    // 這句必須説出來：清單裏少一個號，和「這個號被摘掉了」是兩回事，而後者
+    // 這句必須說出來：清單裡少一個號，和「這個號被摘掉了」是兩回事，而後者
     // 不吭聲就等於範圍被無聲縮小。
-    if (aGone) { aText += "；其中 " + aGone + " 項 CPA 已不再報告，仍勾着"; }
+    if (aGone) { aText += "；其中 " + aGone + " 項 CPA 已不再報告，仍勾著"; }
   }
   aNote.className = "hint" + ((!scopeAccountsEditable() || warn) ? " warn" : "");
   aNote.appendChild(el("span", { text: aText }));
-  // 降級説明只掛一次（賬號是第一列），文案裏已經説清它同時影響模型。
+  // 降級說明只掛一次（賬號是第一列），文案裡已經說清它同時影響模型。
   if (warn) { aNote.appendChild(el("span", { text: "　" + warn })); }
 
   var mNote = $("scopeModelNote");
   clear(mNote);
   var mText = "已選 " + selM.length + " / 候選 " + scope.modelItems.length;
   var mGone = countMissing(scope.modelItems);
-  if (mGone) { mText += "；其中 " + mGone + " 項不在服務端清單裏"; }
+  if (mGone) { mText += "；其中 " + mGone + " 項不在服務端清單裡"; }
   mNote.className = "hint";
   mNote.appendChild(el("span", { text: mText }));
 
@@ -2464,7 +2464,7 @@ function renderScopeMeta(d) {
   var count = (typeof d.probe_proxy_count === "number") ? d.probe_proxy_count : null;
   var pText;
   if (scope.hasProxyFields) {
-    pText = "明文顯示可直接編輯" + (count === null ? "" : ("，插件裏共 " + count + " 條"));
+    pText = "明文顯示可直接編輯" + (count === null ? "" : ("，插件裡共 " + count + " 條"));
   } else {
     pText = "當前 .so 的 status 不返回代理信息";
   }
@@ -2476,8 +2476,8 @@ function renderScopeMeta(d) {
     var rCount = (typeof d.probe_proxy_rotating_count === "number") ? d.probe_proxy_rotating_count : null;
     rNote.appendChild(el("span", {
       text: scope.hasRotField
-        ? ("明文顯示可直接編輯" + (rCount === null ? "" : ("，插件裏共 " + rCount + " 條")))
-        : "當前 .so 不支持輪換池 —— 換新版並重啓 CPA 後可用"
+        ? ("明文顯示可直接編輯" + (rCount === null ? "" : ("，插件裡共 " + rCount + " 條")))
+        : "當前 .so 不支持輪換池 —— 換新版並重啟 CPA 後可用"
     }));
   }
 
@@ -2491,24 +2491,24 @@ function renderScopeMeta(d) {
   pHint.className = "hint" + (maskedLines.length || notURL.length ? " warn" : "");
   var bits = [lines.length + " 行"];
   if (!touched) {
-    bits.push("與插件裏的一致，這次保存【不會】提交代理");
+    bits.push("與插件裡的一致，這次保存【不會】提交代理");
   } else {
     bits.push("保存時會替換整個清單；順序就是探測的嘗試順序");
   }
   if (maskedLines.length) {
     // 明文回填之後，帶 *** 的行只可能是從舊版本頁面複製過來的掩碼。存回去會
-    // 毀掉那條代理，而且毀得很隱蔽：配置看着還在，探測卻連不出去。
-    bits.push("有 " + maskedLines.length + " 行帶着 ***，那是舊版的掩碼不是真值，保存會被攔下");
+    // 毀掉那條代理，而且毀得很隱蔽：配置看著還在，探測卻連不出去。
+    bits.push("有 " + maskedLines.length + " 行帶著 ***，那是舊版的掩碼不是真值，保存會被攔下");
   }
   if (notURL.length) {
-    bits.push(notURL.length + " 行不像 URL（少 scheme://）—— 照樣提交，合法性由插件判，錯了會出現在下面的配置錯誤裏");
+    bits.push(notURL.length + " 行不像 URL（少 scheme://）—— 照樣提交，合法性由插件判，錯了會出現在下面的配置錯誤裡");
   }
   pHint.appendChild(el("span", { text: bits.join("；") + "。" }));
 
   var dirty = $("scopeDirty");
   clear(dirty);
   dirty.className = "hint" + (scope.dirty ? " warn" : "");
-  // 賬號那一側讀不到的時候，不要寫「0 賬號」—— 那看着像是人自己一個都沒選。
+  // 賬號那一側讀不到的時候，不要寫「0 賬號」—— 那看著像是人自己一個都沒選。
   dirty.appendChild(el("span", {
     text: (scopeAccountsEditable()
             ? ("表單：" + selA.length + " 賬號 × " + selM.length + " 模型 = " +
@@ -2520,7 +2520,7 @@ function renderScopeMeta(d) {
   $("btnScopeReset").disabled = !scope.dirty;
 }
 
-// config_errors 的元素形狀由插件決定，這裏對字符串、對象和 map 都兜住 ——
+// config_errors 的元素形狀由插件決定，這裡對字符串、對象和 map 都兜住 ——
 // 寧可顯示一行 JSON，也不要因為形狀沒對上就把錯誤吞掉。
 function configErrorLines(d) {
   var v = d ? d.config_errors : null;
@@ -2559,7 +2559,7 @@ function configErrorLines(d) {
 }
 
 // 這塊沒有關閉按鈕：它是一個【狀態】而不是一條事件通知。關掉它，配置還是錯的，
-// 而下一次輪詢它又會回來 —— 不如一直掛着，直到配置改對。
+// 而下一次輪詢它又會回來 —— 不如一直掛著，直到配置改對。
 function renderScopeErrors(d) {
   var box = $("scopeErrors");
   var lines = configErrorLines(d);
@@ -2570,7 +2570,7 @@ function renderScopeErrors(d) {
   if (!lines.length) { return; }
 
   var msg = el("div", { cls: "msg" });
-  msg.appendChild(el("div", { text: "插件讀配置時丟掉了這些條目 —— 它們不在探測範圍裏，但看起來像是在：" }));
+  msg.appendChild(el("div", { text: "插件讀配置時丟掉了這些條目 —— 它們不在探測範圍裡，但看起來像是在：" }));
   lines.forEach(function (l) { msg.appendChild(el("div", { cls: "mono", text: "· " + l })); });
   msg.appendChild(el("div", { text: "不致命：插件照常跑。但在改對之前，上面的目標桶數不是你以為的那個。" }));
   box.appendChild(el("div", { cls: "notice warn" }, [msg]));
@@ -2590,7 +2590,7 @@ function addModelFromInput() {
   var raw = input.value.trim();   // 只去首尾空白（多半是粘貼帶進來的），其餘原樣
   if (!raw) { return; }
   if (/\s/.test(raw)) {
-    notify("err", "模型 id 裏不該有空白字符：" + raw + "。一次加一個。");
+    notify("err", "模型 id 裡不該有空白字符：" + raw + "。一次加一個。");
     return;
   }
   var known = hasItemNamed(scope.modelItems, raw);
@@ -2602,7 +2602,7 @@ function addModelFromInput() {
   scope.modelSig = "";            // 清單變了，強制重建
   if (state.data) { renderScope(state.data); }
   notify("ok", already
-    ? (raw + " 本來就在清單裏，已確保勾上。")
+    ? (raw + " 本來就在清單裡，已確保勾上。")
     : ("已把 " + raw + " 加進清單（還沒保存）。id 原樣提交，大小寫和橫線一個字符都沒動。"));
 }
 
@@ -2611,7 +2611,7 @@ function scopeDiff(d) {
   var lines = [];
 
   // 淺合併：只發改過的鍵。把沒改的鍵一起發回去，等於拿頁面上這份可能已經過時的
-  // 快照去覆蓋配置 —— 別人剛在 config.yaml 裏改的東西會被無聲頂掉。
+  // 快照去覆蓋配置 —— 別人剛在 config.yaml 裡改的東西會被無聲頂掉。
   if (scopeAccountsEditable()) {
     var baseA = strList(d.probe_accounts);
     var nextA = selectedAccounts();
@@ -2628,7 +2628,7 @@ function scopeDiff(d) {
     lines.push({ text: "模型：" + baseM.length + " → " + nextM.length + " 個" });
   }
 
-  // 代理現在是明文回填的，所以判據就是最樸素的那個：和插件裏的值逐行比。
+  // 代理現在是明文回填的，所以判據就是最樸素的那個：和插件裡的值逐行比。
   // 沒動過 diff 就是空的，什麼都不提交；動過就整段替換。
   // 舊 .so 報不出輪換池：那種情況下【不提交】這一欄，否則會把它存成空的。
   if (scope.hasRotField) {
@@ -2643,7 +2643,7 @@ function scopeDiff(d) {
   var nextP = parseLines(scope.proxyText);
   if (!sameList(baseP, nextP)) {
     patch.probe_proxies = nextP;
-    lines.push({ text: "代理：" + baseP.length + " → " + nextP.length + " 條（整段替換；順序即嘗試順序，這裏不顯示內容）" });
+    lines.push({ text: "代理：" + baseP.length + " → " + nextP.length + " 條（整段替換；順序即嘗試順序，這裡不顯示內容）" });
   }
 
   return { patch: patch, lines: lines };
@@ -2659,13 +2659,13 @@ function doSaveScope() {
   var d = state.data;
   if (!d) { notify("err", "還沒拿到狀態，等一次刷新再保存。"); return; }
 
-  // 框裏現在是明文，所以帶 *** 的行只可能是從舊版頁面複製來的掩碼。掩碼是單向
-  // 的，存回去會毀掉那條代理，而且毀得很隱蔽：配置看着還在，探測卻連不出去。
+  // 框裡現在是明文，所以帶 *** 的行只可能是從舊版頁面複製來的掩碼。掩碼是單向
+  // 的，存回去會毀掉那條代理，而且毀得很隱蔽：配置看著還在，探測卻連不出去。
   var masked = parseLines(scope.proxyText).concat(parseLines(scope.rotText)).filter(looksMasked);
   if (masked.length) {
-    notify("err", "代理裏有 " + masked.length + " 行帶着 ***。那是舊版頁面的掩碼，不是真值，" +
-      "推不回原值；存回去會把那條代理毀掉，而且毀得很隱蔽：配置看着還在，探測卻連不出去。" +
-      "所以這次什麼都沒發 —— 把那幾行換成完整 URL，或者點「放棄改動」退回插件裏的當前值。");
+    notify("err", "代理裡有 " + masked.length + " 行帶著 ***。那是舊版頁面的掩碼，不是真值，" +
+      "推不回原值；存回去會把那條代理毀掉，而且毀得很隱蔽：配置看著還在，探測卻連不出去。" +
+      "所以這次什麼都沒發 —— 把那幾行換成完整 URL，或者點「放棄改動」退回插件裡的當前值。");
     return;
   }
 
@@ -2682,12 +2682,12 @@ function doSaveScope() {
   lines.push({ text: "保存後的目標桶數：" + finalA.length + " × " + finalM.length +
                      " = " + (finalA.length * finalM.length) + " 個。" });
   // 清空一側不是「探測範圍變成零」，而是「這一側不再限定範圍」—— 兩者差得很遠，
-  // 值得在按下去之前説清楚。
+  // 值得在按下去之前說清楚。
   if (!finalA.length) {
-    lines.push({ text: "注意：賬號範圍將為空，主動探測無法啓動。已有模板不會被刪除。", em: true });
+    lines.push({ text: "注意：賬號範圍將為空，主動探測無法啟動。已有模板不會被刪除。", em: true });
   }
   if (!finalM.length) {
-    lines.push({ text: "注意：模型範圍將為空，主動探測無法啓動。已有模板不會被刪除。", em: true });
+    lines.push({ text: "注意：模型範圍將為空，主動探測無法啟動。已有模板不會被刪除。", em: true });
   }
   lines.push({ text: "只發改動的鍵（" + keys.join("、") + "）。未修改的字段不提交。" });
   lines.push({ text: "這只是改配置：不會開始採集，也不影響業務端的替換。採集要點「開始探測」。" });
@@ -2734,13 +2734,13 @@ function doResetScope() {
   if (state.data) { renderScope(state.data); }
   notify("ok", "已放棄未保存的改動，表單退回當前配置。");
   // 「放棄改動」= 把服務端那份再給我一遍。清單在表單被動過期間是不刷的，所以
-  // 這裏強制讀一次，省得還要等最多 60 秒才看到別人剛加的號。
+  // 這裡強制讀一次，省得還要等最多 60 秒才看到別人剛加的號。
   fetchChoices(true).then(function () { if (state.data) { renderScope(state.data); } });
 }
 
 /* ---------------------------- 探測進度 ---------------------------- */
 
-// 舊的 .so 不返回 probe_run。那種情況下按鈕要停用並説清楚原因，而不是讓人點了
+// 舊的 .so 不返回 probe_run。那種情況下按鈕要停用並說清楚原因，而不是讓人點了
 // 之後拿到一個 404 —— 「這個版本沒有這個功能」和「這次請求失敗了」是兩回事。
 function probeRunOf(d) {
   var r = d ? d.probe_run : null;
@@ -2766,7 +2766,7 @@ function renderProbeRun(d) {
     start.disabled = true;
     cancel.disabled = true;
     note.className = "hint warn";
-    note.appendChild(el("span", { text: "當前 .so 的 status 不返回 probe_run —— 這個版本還沒有插件內探測，換成新的 .so 並重啓 CPA 才有。" }));
+    note.appendChild(el("span", { text: "當前 .so 的 status 不返回 probe_run —— 這個版本還沒有插件內探測，換成新的 .so 並重啟 CPA 才有。" }));
     clear($("probeLines"));
     return;
   }
@@ -2804,7 +2804,7 @@ function renderProbeRun(d) {
   var atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 24;
   clear(box);
   lines.forEach(function (line) { box.appendChild(el("p", { text: line })); });
-  // 人往回翻的時候不要把他拽回底部；貼着底看的時候才跟着滾。
+  // 人往回翻的時候不要把他拽回底部；貼著底看的時候才跟著滾。
   if (atBottom) { box.scrollTop = box.scrollHeight; }
 }
 
@@ -2821,14 +2821,14 @@ function render() {
   renderSelftestAuths(d);
   renderSelftestModels(d);
   renderOverview(d);
-  $("btnDryRun").textContent = d.dry_run ? "關閉 dry_run（開始改寫流量）" : "開啓 dry_run（停止改寫）";
+  $("btnDryRun").textContent = d.dry_run ? "關閉 dry_run（開始改寫流量）" : "開啟 dry_run（停止改寫）";
   $("btnRole").textContent = "切到 " + (d.role === "probe" ? "business" : "probe");
 }
 
 /* ---------------------------- 輪詢 ---------------------------- */
 
 // 探測跑起來的時候 10 秒一刷太鈍：進度條幾乎不動，人會以為卡死了。跑完之後要
-// 退回原來的節奏，否則頁面開一天就是幾萬次無謂請求。這裏【複用同一個定時器】，
+// 退回原來的節奏，否則頁面開一天就是幾萬次無謂請求。這裡【複用同一個定時器】，
 // 再開一個只會讓兩條時間線互相打架。
 function desiredPollMs() {
   var run = probeRunOf(state.data);
@@ -2903,10 +2903,10 @@ function doToggleDryRun() {
       confirmText: "關閉 dry_run",
       lines: [
         { text: "關閉後插件將開始改寫真實業務流量：凡是帶 " + (d.replace_length || 312) +
-                " 長度 X-Codex-Turn-State 的請求，都會被替換成 store 裏該桶的 " +
+                " 長度 X-Codex-Turn-State 的請求，都會被替換成 store 裡該桶的 " +
                 (d.template_length || 292) + " 再發往上游。" },
-        { text: "在此之前這些替換隻出現在日誌裏，上游收到的仍是原值。", em: true },
-        { text: "回滾方式：把 dry_run 重新打開即可，無需重啓。" }
+        { text: "在此之前這些替換隻出現在日誌裡，上游收到的仍是原值。", em: true },
+        { text: "回滾方式：把 dry_run 重新打開即可，無需重啟。" }
       ]
     });
   }
@@ -2932,15 +2932,15 @@ function doToggleRole() {
     lines: [
       next === "probe"
         ? { text: "probe 角色只從上游響應採集模板寫盤，不會替換任何業務請求的頭。切過去之後業務端會停止替換。" }
-        : { text: "business 角色只讀 store 並按 replace-only 替換，不再採集。切過去之前請確認 store 裏的桶已經探齊。" },
-      { text: "能力聲明是插件註冊時上報給 CPA 的，熱重載不一定會重新協商。切換後若發現響應鈎子沒有被調用（探測採不到）或替換沒發生，需要重啓一次 CPA。", em: true }
+        : { text: "business 角色只讀 store 並按 replace-only 替換，不再採集。切過去之前請確認 store 裡的桶已經探齊。" },
+      { text: "能力聲明是插件註冊時上報給 CPA 的，熱重載不一定會重新協商。切換後若發現響應鉤子沒有被調用（探測採不到）或替換沒發生，需要重啟一次 CPA。", em: true }
     ]
   }).then(function (go) {
     if (!go) { return; }
     return withBusy(function () {
       return resAction("/ops/role", { value: next }).then(function () {
         notify("info", "role 已切到 " + next +
-          "。若接下來發現鈎子沒被調用（probe 採不到 / business 不替換），重啓一次 cli-proxy-api。");
+          "。若接下來發現鉤子沒被調用（probe 採不到 / business 不替換），重啟一次 cli-proxy-api。");
         return refresh();
       });
     }).catch(actionError);
@@ -2973,7 +2973,7 @@ function doClearAll() {
     danger: true,
     confirmText: "全部清空",
     lines: [
-      { text: "store 裏所有 (賬號, 模型) 的模板都會被刪除。" },
+      { text: "store 裡所有 (賬號, 模型) 的模板都會被刪除。" },
       { text: "在重新探齊之前，業務端將完全停止替換 —— 所有降級請求都會原樣發往上游。", em: true },
       { text: "重新探齊要跑一輪探測（無需停業務），並且會消耗額度。" }
     ]
@@ -3013,7 +3013,7 @@ function doProbeStart() {
     if (!go) { return; }
     return withBusy(function () {
       return resAction("/ops/probe/start", {}).then(function () {
-        notify("ok", "探測已開始。進度就在這一節裏，頁面會自動加快刷新。");
+        notify("ok", "探測已開始。進度就在這一節裡，頁面會自動加快刷新。");
         return refresh();
       });
     }).catch(actionError);
@@ -3043,12 +3043,12 @@ function doProbeCancel() {
 // 刻意【不】走 withBusy：整批最多要跑 45 秒，把整頁按鈕鎖這麼久沒道理 —— 這個
 // 操作不改任何狀態、不花額度（請求不帶憑據），和別的操作並行沒有風險。
 //
-// 測的是【插件裏已保存的】代理池，不是文本框裏的內容。代理 URL 帶密碼，而這是
+// 測的是【插件裡已保存的】代理池，不是文本框裡的內容。代理 URL 帶密碼，而這是
 // 免鑑權的 GET 路由，把清單當查詢參數傳會把密碼寫進宿主訪問日誌和瀏覽器歷史。
 function doProxyCheck() {
   if (proxyCheck.running) { return; }
   if (scope.dirty) {
-    notify("warn", "代理框改過還沒保存 —— 測的是插件裏已存的那一份。想測剛填的，先點「保存範圍」。");
+    notify("warn", "代理框改過還沒保存 —— 測的是插件裡已存的那一份。想測剛填的，先點「保存範圍」。");
   }
   proxyCheck.running = true;
   proxyCheck.data = null;
@@ -3065,7 +3065,7 @@ function doProxyCheck() {
   }).catch(function (err) {
     var m = (err && err.message) ? err.message : String(err);
     if (/404|no such/i.test(m)) {
-      m = "當前 .so 沒有這個路由 —— 換上新版 .so 並重啓 CPA 之後才有「測試連通性」。";
+      m = "當前 .so 沒有這個路由 —— 換上新版 .so 並重啟 CPA 之後才有「測試連通性」。";
     }
     notify("err", m);
   }).then(function () {
@@ -3076,7 +3076,7 @@ function doProxyCheck() {
 }
 
 // 追加而不是整段替換：池子有二十條的時候，加一條不該逼人滾到文本框末尾找位置。
-// 分隔符取空白和逗號 —— 這三種字符在代理 URL 裏都必須轉義成 %XX，所以按它們切
+// 分隔符取空白和逗號 —— 這三種字符在代理 URL 裡都必須轉義成 %XX，所以按它們切
 // 分不會劈開一條合法的代理。重複的行直接跳過，順序保持不變（順序就是探測順序）。
 function doAddRotating() { addProxyLines("scopeRotAdd", "rotText"); }
 function doAddProxy() { addProxyLines("scopeProxyAdd", "proxyText"); }
@@ -3099,7 +3099,7 @@ function addProxyLines(inputID, field) {
     lines.push(c);
     added++;
   });
-  if (!added) { notify("warn", "這幾條清單裏已經有了。"); return; }
+  if (!added) { notify("warn", "這幾條清單裡已經有了。"); return; }
 
   scope[field] = lines.join("\n");
   scope.dirty = true;
@@ -3128,8 +3128,8 @@ function selfTestMessage(r, model) {
   lines.push("上游狀態碼：" + code);
   lines.push("模型：" + ((r && r.model) || model));
   // 沒定向就是真的不知道用了哪個號：CPA 的 HostModelExecutionResponse 只有
-  // StatusCode/Headers/Body，不帶賬號標識。這裏必須明説「未知」，填個空串或
-  // 拿請求裏的值糊弄，會讓人以為自檢驗證過那個賬號。
+  // StatusCode/Headers/Body，不帶賬號標識。這裡必須明說「未知」，填個空串或
+  // 拿請求裡的值糊弄，會讓人以為自檢驗證過那個賬號。
   if (r && r.targeted) {
     lines.push("賬號：" + ((r && r.auth_id) || "—") + "（已定向）");
   } else {
@@ -3151,7 +3151,7 @@ function doSelfTest(opts) {
 
   var lines = [
     { text: "會向上遊真實發一次請求，消耗額度。" },
-    { text: "只驗證鏈路是否打通，不會產生桶：宿主會讓插件自己發出的請求跳過本插件的響應鈎子，所以自檢永遠採不到模板。", em: true },
+    { text: "只驗證鏈路是否打通，不會產生桶：宿主會讓插件自己發出的請求跳過本插件的響應鉤子，所以自檢永遠採不到模板。", em: true },
     { text: "要真正採集模板，用「開始探測」。" }
   ];
   if (auth) {
@@ -3176,7 +3176,7 @@ function doSelfTest(opts) {
           return refresh();
         });
     }).catch(function (err) {
-        // 服務端的錯誤原文是排障線索，一律原樣透出。400 = 模型名不在清單裏。
+        // 服務端的錯誤原文是排障線索，一律原樣透出。400 = 模型名不在清單裡。
       var prefix = (err instanceof ApiError && err.status === 400)
         ? "自檢未執行（模型名不被接受）："
         : "自檢未執行：";
@@ -3185,7 +3185,7 @@ function doSelfTest(opts) {
   });
 }
 
-/* ---------------------------- 啓動 ---------------------------- */
+/* ---------------------------- 啟動 ---------------------------- */
 
 $("btnPause").addEventListener("click", function () {
   state.paused = !state.paused;
@@ -3261,10 +3261,10 @@ function renderOverview(d) {
   role.className = 'status-pill' + (d.role === 'business' ? ' is-ok' : '');
   var run = probeRunOf(d);
   $('overviewProbe').textContent = !run ? '狀態不可用' : run.running ? '探測運行中' : run.error ? '探測異常' : '探測待命';
-  $('overviewProbeNote').textContent = !run ? '當前服務未返回任務狀態' : run.error ? '詳情見下方探測活動' : run.running ? '主動採集與續期任務已啓動' : run.finished_at ? '任務已停止，可手動啓動' : '尚未啓動主動探測';
+  $('overviewProbeNote').textContent = !run ? '當前服務未返回任務狀態' : run.error ? '詳情見下方探測活動' : run.running ? '主動採集與續期任務已啟動' : run.finished_at ? '任務已停止，可手動啟動' : '尚未啟動主動探測';
   $('overviewProbe').className = 'stat-value text' + (run && run.error ? ' warntext' : '');
   $('overviewMode').textContent = d.inject_mode === 'always' ? '始終注入' : d.inject_mode === 'replace-only' ? '按長度替換' : '—';
-  $('overviewModeNote').textContent = d.role === 'probe' ? '探測模式 · 不改寫請求' : d.dry_run ? '模擬運行 · 不改寫請求' : '實際請求改寫已啓用';
+  $('overviewModeNote').textContent = d.role === 'probe' ? '探測模式 · 不改寫請求' : d.dry_run ? '模擬運行 · 不改寫請求' : '實際請求改寫已啟用';
   var fixed = typeof d.probe_proxy_count === 'number' ? d.probe_proxy_count : null;
   var rotating = typeof d.probe_proxy_rotating_count === 'number' ? d.probe_proxy_rotating_count : null;
   $('overviewExits').textContent = fixed === null || rotating === null ? '—' : String(fixed + rotating);
